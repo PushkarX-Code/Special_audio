@@ -4,8 +4,10 @@ import { MockHeadphones } from './device/mock.js';
 import { NativeHeadphones } from './device/native.js';
 import { createMusicBar } from './ui/music.js';
 import { ACCENTS, readLook, applyLook, saveLook } from './ui/look.js';
-import { EQ_PRESETS } from './protocol/drafts.js';
+import { EQ_PRESETS, DOP } from './protocol/drafts.js';
 import { createHero } from './ui/hero.js';
+import { createLevels } from './ui/levels.js';
+import { createMusicViz } from './ui/music-viz.js';
 import { createBackground } from './ui/background.js';
 import { createEqVisual } from './ui/eq-visual.js';
 import { radioGroup, switchControl, dotRipple } from './ui/controls.js';
@@ -19,10 +21,12 @@ let mock = null;
 document.documentElement.dataset.platform = isDesktop ? 'desktop' : 'web';
 
 // ---- visuals ----
-const hero = createHero($('hero-canvas'));
+const sound = createLevels();
+const hero = createHero($('hero-canvas'), sound);
+const musicViz = createMusicViz($('music-viz'), sound);
 const background = createBackground($('grid'));
 const eqVisual = createEqVisual($('eq-canvas'));
-const refreshColors = () => requestAnimationFrame(() => [hero, background, eqVisual].forEach((v) => v.refreshColors()));
+const refreshColors = () => requestAnimationFrame(() => [hero, background, eqVisual, musicViz].forEach((v) => v.refreshColors()));
 
 // ---- tabs ----
 const tabs = [...document.querySelectorAll('.tab')];
@@ -95,6 +99,15 @@ for (const [key, id] of [['accent', 'accent-chips'], ['dots', 'dots-chips'], ['g
 }
 refreshColors();
 
+// Visualizer on/off (this computer only)
+const viz = radioGroup($('viz-chips'), (v) => setViz(v));
+function setViz(v) {
+  prefs.set('viz', v); viz.set(v);
+  document.documentElement.dataset.viz = v;
+  sound.setEnabled(v === 'on'); hero.wake(); musicViz.wake();
+}
+setViz(prefs.get('viz', 'on'));
+
 // ---- connection ----
 $('demo-btn').addEventListener('click', async () => {
   mock = new MockHeadphones();
@@ -128,7 +141,7 @@ watchSystemHeadphones((dev) => {
   if (dev && dev.address !== previous?.address && controller.state.kind !== 'demo') openControls(dev);
 });
 $('retry-btn').addEventListener('click', () => openControls(systemDevice));
-createMusicBar($('music'));
+createMusicBar($('music'), 2000, (playing) => { sound.setPlaying(playing); hero.wake(); musicViz.wake(); });
 $('contact-btn').addEventListener('click', () => {
   if (isDesktop) invoke('contact');
   else location.href = `mailto:${['email.puskar', 'gmail.com'].join('@')}?subject=Special%20Audio`;
@@ -194,6 +207,15 @@ $('preset-save').addEventListener('click', () => {
 renderMyPresets();
 
 // ---- settings ----
+// Experimental controls: draft commands (EQ, spatial, low lag) on the real headphones. Off by default.
+controller.eqSetOp = prefs.get('eqSetOp', DOP.SET_EQ);
+controller.onEqOpLearned = (op) => prefs.set('eqSetOp', op);
+const exp = switchControl($('exp-switch'), (on) => {
+  prefs.set('experimental', on); exp.set(on); controller.setExperimental(on);
+  if (on) toast('Experimental controls on. If something looks wrong, turn this off.');
+});
+exp.set(prefs.get('experimental', false));
+controller.setExperimental(prefs.get('experimental', false));
 const notif = switchControl($('notif-switch'), (on) => { prefs.set('notify', on); notif.set(on); });
 notif.set(prefs.get('notify', true));
 const login = switchControl($('login-switch'), async (on) => {

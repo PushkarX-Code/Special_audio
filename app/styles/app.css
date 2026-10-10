@@ -278,7 +278,7 @@ h1, h2, p { margin: 0; }
 
 /* disabled states: not connected / no control channel, or the feature is not verified on real hardware */
 .card[data-unavailable="true"] { opacity: 0.45; }
-.card[data-locked="true"] .lock::before { content: "Not verified yet"; }
+.card[data-locked="true"] .lock::before { content: "Turn on in Settings → Experimental"; }
 .card[data-locked="true"] { opacity: 0.6; }
 
 /* ---------- segmented control ---------- */
@@ -440,6 +440,8 @@ h1, h2, p { margin: 0; }
 .music-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .music-artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .music-buttons { display: flex; gap: 8px; flex: none; }
+.music-viz { flex: 0 1 150px; min-width: 64px; height: 30px; }
+[data-viz="off"] .music-viz { display: none; }
 .music .icon-btn svg { width: 18px; height: 18px; }
 .music .icon-btn.play { width: 46px; height: 46px; background: var(--chip-on-bg); color: var(--chip-on-fg); border-color: transparent; }
 .music[data-playing="true"] .icon-btn.play { box-shadow: 0 0 18px rgb(var(--accent-rgb) / 0.35); }

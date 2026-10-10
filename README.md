@@ -73,8 +73,8 @@ There's no warning because the warning only appears for files downloaded through
 | **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
 | **Sound** | EQ presets, custom EQ (bass, mid, treble) with presets you name and save, spatial audio |
 | **Audiophile** | Low lag mode, high quality audio, Dirac Opteo, device details |
-| **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation |
-| **Settings** | Start at login, connection notifications, updates, contact us |
+| **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation, music visualizer |
+| **Settings** | Start at login, connection notifications, experimental controls, updates, contact us |
 
 It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.
 
@@ -87,10 +87,14 @@ It also lives in your **menu bar (Mac) or system tray (Windows)**: click the ico
 | CMF Headphone Pro: real battery, firmware, noise control (ANC, Transparency, Off, strength) | Yes | Next update |
 | Any Bluetooth headphones: name and connected notification | Yes | Yes (plus battery when reported) |
 | Music controls: song, play/pause, next, previous | Any music app | Spotify and Apple Music |
+| Visualizer: the ring and music card move with your music | Yes, from the real sound | A gentle pulse while music plays |
 | Menu bar / tray panel, start at login, in-app updates, custom looks | Yes | Yes |
-| CMF Headphone Pro: EQ, custom EQ, spatial audio, low lag | After the Bluetooth capture confirms the commands | |
+| CMF Headphone Pro: EQ presets, spatial audio, low lag | Turn on **Settings → Experimental controls** | Next update |
+| CMF Headphone Pro: custom EQ (bass, mid, treble) | In the demo for now | |
 
 Close the Nothing X app on your phone before connecting: the headphones accept one controller at a time.
+
+**Experimental controls** use commands from community research that haven't been confirmed on this headphone yet. After every change the app asks the headphones what they actually switched to and shows that. If EQ doesn't change, the app tries the second known command once and remembers the one that works. Turn it off any time.
 
 ---
 
@@ -114,10 +118,11 @@ GitHub builds them: **Actions → Build app → Run workflow**. That publishes a
 
 ### Safety
 
-- Only commands confirmed by two independent sources (later: by a real capture) can reach real headphones. Everything else throws before it is sent.
+- Only commands confirmed by two independent sources (later: by a real capture) can reach real headphones. Draft commands need Settings → Experimental controls. Anything else throws before it is sent.
 - No firmware, reset or pairing commands exist in the code.
 - One command per 150 ms. Every command waits for the device reply, with one retry.
 - Raw Bluetooth logs are git-ignored: they contain addresses and serial numbers.
+- The Windows visualizer reads the sound level of what's playing ~30 times a second. Nothing is recorded or saved.
 
 ### Layout
 

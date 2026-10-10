@@ -102,6 +102,7 @@
               <strong class="music-title" data-music-title></strong>
               <span class="desc music-artist" data-music-artist></span>
             </div>
+            <canvas class="music-viz" id="music-viz" aria-hidden="true"></canvas>
             <div class="music-buttons">
               <button type="button" class="icon-btn" data-action="previous" aria-label="Previous"></button>
               <button type="button" class="icon-btn play" data-action="toggle" aria-label="Play"></button>
@@ -216,6 +217,14 @@
               <button type="button" role="radio" class="chip" data-value="reduced">Calm</button>
             </div>
           </section>
+          <section class="card" aria-labelledby="viz-title">
+            <div class="card-head"><h2 class="label" id="viz-title">Visualizer</h2></div>
+            <p class="desc">The ring and the music card move with what you're listening to.</p>
+            <div class="chips" role="radiogroup" aria-labelledby="viz-title" id="viz-chips">
+              <button type="button" role="radio" class="chip" data-value="on">On</button>
+              <button type="button" role="radio" class="chip" data-value="off">Off</button>
+            </div>
+          </section>
           <section class="card" aria-labelledby="accent-title">
             <div class="card-head"><h2 class="label" id="accent-title">Accent colour</h2></div>
             <div class="chips swatches" role="radiogroup" aria-labelledby="accent-title" id="accent-chips"></div>
@@ -249,6 +258,10 @@
           <section class="card row" aria-labelledby="notif-title">
             <div><div class="card-head"><h2 class="label" id="notif-title">Notifications</h2></div><p class="desc">Tell me when headphones connect.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="notif-title" id="notif-switch"><span class="knob"></span></button>
+          </section>
+          <section class="card row" data-desktop aria-labelledby="exp-title">
+            <div><div class="card-head"><h2 class="label" id="exp-title">Experimental controls</h2></div><p class="desc">Unlock EQ presets, spatial audio and low lag on the CMF Headphone Pro. These commands come from community research and aren't confirmed yet. The app checks what the headphones report back after every change.</p></div>
+            <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
           </section>
           <section class="card row" data-desktop aria-labelledby="update-title">
             <div><div class="card-head"><h2 class="label" id="update-title">Updates</h2></div><p class="desc">Version <span id="app-version">-</span>. Updates install from inside the app.</p></div>

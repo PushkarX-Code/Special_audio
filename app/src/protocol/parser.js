@@ -13,6 +13,7 @@ export const IN = {
   ANC_PUSH_ALT: 0x6003,  // S1 only
   MODEL: 0x401c,         // S2 only (draft)
   EQ: 0x4050,            // S1 (draft)
+  EQ_ALT: 0x401f,        // S2 (draft)
   SPATIAL: 0x404f,       // S1 (draft)
   LOW_LAG_REPLY: 0x4041, // S1, S2
   LOW_LAG_PUSH: 0x7040,  // S2 only
@@ -22,7 +23,7 @@ export const INCOMING_NAMES = {
   [IN.BATTERY_REPLY]: 'battery', [IN.BATTERY_PUSH]: 'battery (push)',
   [IN.FIRMWARE]: 'firmware',
   [IN.ANC_REPLY]: 'noise control', [IN.ANC_PUSH]: 'noise control (push)', [IN.ANC_PUSH_ALT]: 'noise control (push)',
-  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.SPATIAL]: 'spatial audio',
+  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.EQ_ALT]: 'eq preset', [IN.SPATIAL]: 'spatial audio',
   [IN.LOW_LAG_REPLY]: 'low lag', [IN.LOW_LAG_PUSH]: 'low lag (push)',
 };
 
@@ -61,7 +62,8 @@ export function parseFrame({ command, payload: p }) {
       if (p.length < 2) return null;
       return { model: ((p[1] << 8) | p[0]).toString(16).toUpperCase() }; // 75 B1 -> "B175"
     }
-    case IN.EQ: {
+    case IN.EQ:
+    case IN.EQ_ALT: {
       const preset = EQ_PRESETS.find((x) => x.index === p[0]);
       return preset ? { eq: preset.id } : null;
     }

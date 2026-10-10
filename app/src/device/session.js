@@ -21,7 +21,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 export class Session {
   constructor(transport) {
     this.transport = transport;
-    this.allowDraft = transport.kind === 'demo';
+    this.allowDraft = transport.kind === 'demo'; // the controller also turns it on for Experimental controls
     this.seq = 0;
     this.queue = Promise.resolve();
     this.lastSend = 0;

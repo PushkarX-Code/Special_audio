@@ -40,6 +40,20 @@ export class Controller {
     this.session = null;
     this.transport = null;
     this.reconnectTimer = null;
+    this.experimental = false; // Settings → Experimental controls: draft commands on real hardware
+    this.eqSetOp = DOP.SET_EQ;  // which EQ SET opcode works on this headphone (learned, see setEq)
+    this.onEqOpLearned = null;
+  }
+
+  // Draft commands: always for the demo device; for real headphones only with Experimental controls on.
+  #allowDraft() { return this.transport?.kind === 'demo' || (this.experimental && !!this.transport); }
+
+  async setExperimental(on) {
+    this.experimental = !!on;
+    if (this.session) this.session.allowDraft = this.#allowDraft();
+    if (this.state.status !== 'connected' || !this.session) return;
+    this.#set({ features: this.#features() });
+    if (on) await this.#readAll();
   }
 
   // ---- state plumbing ----
@@ -87,6 +101,7 @@ export class Controller {
 
   #attach(transport) {
     const s = new Session(transport);
+    s.allowDraft = this.#allowDraft();
     s.on('tx', ({ name, bytes, attempt }) => this.#log({ dir: 'tx', label: name + (attempt ? ' (retry)' : ''), hex: toHex(bytes) }));
     s.on('frame', (f) => {
       const patch = parseFrame(f);
@@ -134,21 +149,21 @@ export class Controller {
 
   // Which controls can be written on this transport: real hardware gets CONFIRMED opcodes only.
   #features() {
-    const allowDraft = this.transport?.kind === 'demo';
+    const allowDraft = this.#allowDraft();
     if (this.state.readOnlyReason) return { anc: false, eq: false, customEq: false, spatial: false, lowLag: false };
     return {
       anc: isAllowed(OP.SET_ANC, { allowDraft }),
       eq: isAllowed(DOP.SET_EQ, { allowDraft }),
       spatial: isAllowed(DOP.SET_SPATIAL, { allowDraft }),
       lowLag: isAllowed(DOP.SET_LOW_LAG, { allowDraft }),
-      // Custom EQ bytes are not confirmed for any source yet: demo device only.
-      customEq: allowDraft,
+      // Custom EQ bytes are not known from any source yet: demo device only.
+      customEq: this.transport?.kind === 'demo',
     };
   }
 
-  // Read everything we are allowed to read. Drafts are skipped on real hardware.
+  // Read everything we are allowed to read. Drafts are skipped on real hardware unless Experimental is on.
   async #readAll() {
-    const allowDraft = this.transport?.kind === 'demo';
+    const allowDraft = this.#allowDraft();
     const reads = [
       draftCmd.getModel(), cmd.getFirmware(), cmd.getBattery(), cmd.getAnc(),
       draftCmd.getEq(), draftCmd.getSpatial(), draftCmd.getLowLag(),
@@ -196,9 +211,20 @@ export class Controller {
     const optimistic = anc === 'anc' ? { anc, ancLevel: level } : { anc };
     return this.#write(['anc', 'ancLevel'], optimistic, cmd.setAnc(byteName), cmd.getAnc());
   }
-  setEq(id) {
+  // The two sources disagree on the EQ SET opcode. On real headphones: send the one that worked last time;
+  // if the read-back doesn't show the new preset, try the other one once and remember it if it works.
+  async setEq(id) {
     if (!this.state.features.eq) return;
-    return this.#write(['eq'], { eq: id }, draftCmd.setEq(id), draftCmd.getEq());
+    const real = this.transport?.kind !== 'demo';
+    const ops = real ? [this.eqSetOp, this.eqSetOp === DOP.SET_EQ ? DOP.SET_EQ_ALT : DOP.SET_EQ] : [DOP.SET_EQ];
+    for (const op of ops) {
+      await this.#write(['eq'], { eq: id }, draftCmd.setEq(id, op), draftCmd.getEq());
+      if (this.state.eq === id) {
+        if (op !== this.eqSetOp) { this.eqSetOp = op; this.onEqOpLearned?.(op); }
+        return;
+      }
+      if (!this.session) return;
+    }
   }
   setSpatial(mode) {
     if (!this.state.features.spatial) return;
