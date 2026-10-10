@@ -8,35 +8,54 @@ A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, s
 
 ![Special Audio, light mode](docs/screenshots/desktop-light.png)
 
-## Install (one command, no security warnings)
+## Download
 
-**Mac**: open the **Terminal** app (press `⌘ Space`, type *Terminal*, press Enter), paste this line and press Enter:
+| | |
+|---|---|
+| **Windows 10 / 11** | **[⬇ Download for Windows](https://github.com/PushkarX-Code/Special_audio/releases/latest/download/Special-Audio-windows-setup.exe)** |
+| **Mac** (Apple Silicon and Intel) | **[⬇ Download for Mac](https://github.com/PushkarX-Code/Special_audio/releases/latest/download/Special-Audio-mac.dmg)** |
 
+All versions: [Releases page](https://github.com/PushkarX-Code/Special_audio/releases)
+
+### The first time you open it, your computer will warn you. This is expected.
+
+Special Audio is a free, independent app. It isn't signed with a paid Apple or Microsoft developer certificate, so your computer says it doesn't know who made it. You only have to approve it once.
+
+**Windows**
+1. Open the file you downloaded (`Special-Audio-windows-setup.exe`).
+2. A blue window says **"Windows protected your PC"**. Click **More info**, then **Run anyway**.
+3. Click through the installer. Special Audio opens and is in your Start menu.
+
+**Mac**
+1. Open the file you downloaded (`Special-Audio-mac.dmg`) and drag **Special Audio** onto the **Applications** folder.
+2. Open **Special Audio** from Applications. macOS says it **"could not verify"** the app. Click **Done**.
+3. Open **System Settings → Privacy & Security**, scroll down to **"Special Audio was blocked"** and click **Open Anyway**. Enter your Mac password and click **Open**.
+4. Still not opening, or macOS says the app is **"damaged"**? Open the **Terminal** app, paste this line, press Enter, then open Special Audio again:
+   ```
+   xattr -cr "/Applications/Special Audio.app"
+   ```
+
+### Or install with one command and skip the warning
+
+This downloads, installs and opens the newest version for you. Run it again any time to update.
+
+**Mac**: open **Terminal** (press `⌘ Space`, type *Terminal*, press Enter), paste this line and press Enter:
 ```
 curl -fsSL https://raw.githubusercontent.com/PushkarX-Code/Special_audio/main/scripts/install-mac.sh | bash
 ```
 
 **Windows**: open **PowerShell** (press the Windows key, type *PowerShell*, press Enter), paste this line and press Enter:
-
 ```
 irm https://raw.githubusercontent.com/PushkarX-Code/Special_audio/main/scripts/install-windows.ps1 | iex
 ```
 
-It downloads the latest version, installs it and opens it. Run the same line again any time to update.
+There's no warning because the warning only appears for files downloaded through a web browser. You can read exactly what each command does: [Mac script](scripts/install-mac.sh), [Windows script](scripts/install-windows.ps1).
 
-**Why a command instead of a download button?** The app isn't signed with a paid Apple or Microsoft certificate yet. Files downloaded through a browser get a "from the internet" mark, and macOS and Windows block unsigned apps that carry it. A file downloaded by the command doesn't get that mark, so the app opens normally. You can read exactly what each command does: [Mac script](scripts/install-mac.sh), [Windows script](scripts/install-windows.ps1).
+### Is it safe?
 
-<details>
-<summary>Prefer to download the file yourself?</summary>
-
-1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases)** and scroll to **Assets** under the newest release.
-2. Windows: download the file ending in **`x64-setup.exe`** and double-click it. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
-3. Mac: download the file ending in **`universal.dmg`**, open it and drag **Special Audio** into **Applications**. If macOS won't open the app, open **Terminal**, paste this line and press Enter, then open the app again:
-   ```
-   xattr -cr "/Applications/Special Audio.app"
-   ```
-
-</details>
+- All the code is public in this repository. Nothing is hidden.
+- The installers are built by GitHub's own servers from this code, not on someone's computer: see [Actions](https://github.com/PushkarX-Code/Special_audio/actions).
+- The app has no account, no sign-in, no tracking and no internet connection. It only talks to your headphones.
 
 ## What works today
 
