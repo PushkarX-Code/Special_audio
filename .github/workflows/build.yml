@@ -66,9 +66,9 @@ jobs:
           tagName: ${{ github.event_name != 'pull_request' && 'v__VERSION__' || '' }}
           releaseName: 'Special Audio v__VERSION__'
           releaseBody: |
-            **Download:** Windows → the `.exe` file. Mac → the `.dmg` file.
-            This build runs in Demo mode. The real headphone connection comes in the next release.
-            Not signed yet: see the README "Install" section for the one-time security prompt.
+            **Easiest install (no security warnings):** see the one-line commands in the [README](https://github.com/PushkarX-Code/Special_audio#install-one-command-no-security-warnings).
+            Or download below: Windows → the `x64-setup.exe` file, Mac → the `universal.dmg` file.
+            This build runs in Demo mode. The real headphone connection comes in a later release.
           releaseDraft: false
           prerelease: false
 
@@ -77,3 +77,32 @@ jobs:
           name: special-audio-${{ matrix.platform }}
           path: ${{ matrix.bundles }}
           if-no-files-found: error
+
+  # Runs the one-command installers on real Windows and Mac machines against the latest release.
+  install-scripts:
+    name: installer (${{ matrix.platform }})
+    if: github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install with the Mac script
+        if: runner.os == 'macOS'
+        run: |
+          bash scripts/install-mac.sh
+          test -d "/Applications/Special Audio.app"
+          xattr -l "/Applications/Special Audio.app" | grep -q quarantine && { echo "quarantine flag still set"; exit 1; } || true
+          osascript -e 'quit app "Special Audio"' || true
+      - name: Install with the Windows script
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Get-Content scripts/install-windows.ps1 -Raw | Invoke-Expression
+          $exe = Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Special Audio') -Filter *.exe | Where-Object { $_.Name -notlike 'uninstall*' }
+          if (-not $exe) { throw 'app exe not found after install' }
+          Write-Host "Installed: $($exe.FullName)"
+          Start-Sleep 3
+          Get-Process | Where-Object { $_.Path -eq $exe.FullName } | Stop-Process -Force

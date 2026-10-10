@@ -8,33 +8,35 @@ A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, s
 
 ![Special Audio, light mode](docs/screenshots/desktop-light.png)
 
-## Download
+## Install (one command, no security warnings)
 
-1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases)**.
-2. Scroll to **Assets** at the bottom of the newest release.
-3. Click the file for your computer to download it:
+**Mac**: open the **Terminal** app (press `⌘ Space`, type *Terminal*, press Enter), paste this line and press Enter:
 
-| Your computer | Click this file |
-|---|---|
-| Windows 10 or 11 | the one ending in **`x64-setup.exe`** |
-| Mac (Apple Silicon or Intel) | the one ending in **`universal.dmg`** |
+```
+curl -fsSL https://raw.githubusercontent.com/PushkarX-Code/Special_audio/main/scripts/install-mac.sh | bash
+```
 
-## Install
+**Windows**: open **PowerShell** (press the Windows key, type *PowerShell*, press Enter), paste this line and press Enter:
 
-The app is not signed with a paid certificate yet, so your computer asks you to confirm the first time.
+```
+irm https://raw.githubusercontent.com/PushkarX-Code/Special_audio/main/scripts/install-windows.ps1 | iex
+```
 
-**Windows**
-1. Double-click the `.exe` file.
-2. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
-3. Follow the installer. Open **Special Audio** from the Start menu.
+It downloads the latest version, installs it and opens it. Run the same line again any time to update.
 
-**Mac**
-1. Double-click the `.dmg` file and drag **Special Audio** into **Applications**.
-2. Open it. If macOS says it can't verify the app, open **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-3. If it says the app is "damaged", open **Terminal**, paste this line and press Enter, then open the app again:
+**Why a command instead of a download button?** The app isn't signed with a paid Apple or Microsoft certificate yet. Files downloaded through a browser get a "from the internet" mark, and macOS and Windows block unsigned apps that carry it. A file downloaded by the command doesn't get that mark, so the app opens normally. You can read exactly what each command does: [Mac script](scripts/install-mac.sh), [Windows script](scripts/install-windows.ps1).
+
+<details>
+<summary>Prefer to download the file yourself?</summary>
+
+1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases)** and scroll to **Assets** under the newest release.
+2. Windows: download the file ending in **`x64-setup.exe`** and double-click it. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
+3. Mac: download the file ending in **`universal.dmg`**, open it and drag **Special Audio** into **Applications**. If macOS won't open the app, open **Terminal**, paste this line and press Enter, then open the app again:
    ```
    xattr -cr "/Applications/Special Audio.app"
    ```
+
+</details>
 
 ## What works today
 
@@ -86,6 +88,7 @@ src-tauri/           desktop app shell (Tauri), icons, Windows/Mac packaging
 docs/                protocol research, screenshots
 test/                tests (capture fixtures go in test/fixtures)
 tools/               dev server
+scripts/             one-command installers for Mac and Windows
 .github/workflows/   automatic Windows + Mac builds
 ```
 
