@@ -70,25 +70,27 @@ There's no warning because the warning only appears for files downloaded through
 
 | Tab | What it does |
 |---|---|
-| **Home** | Headphone name, live battery ring, noise control, quick sound presets |
+| **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
 | **Sound** | EQ presets, custom EQ (bass, mid, treble) with presets you name and save, spatial audio |
 | **Audiophile** | Low lag mode, high quality audio, Dirac Opteo, device details |
-| **Look** | Light, dark or system theme, full or calm animation |
-| **Settings** | Start at login, connection notifications, updates |
+| **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation |
+| **Settings** | Start at login, connection notifications, updates, contact us |
 
-It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control and sound presets.
+It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.
 
 **Updates install from inside the app.** It checks on launch, or go to Settings → Updates → Check now.
 
 ## What works today
 
-| | Status |
-|---|---|
-| Any Bluetooth headphones: name, connected notification, battery (Mac, when the headphones report it) | Yes |
-| Menu bar / tray panel, start at login, in-app updates | Yes |
-| Demo: try every control without headphones (Home → Try demo) | Yes |
-| CMF Headphone Pro: battery and noise control | Next update |
-| CMF Headphone Pro: EQ, custom EQ, spatial audio, low lag | After the Bluetooth capture confirms the commands |
+| | Windows | Mac |
+|---|---|---|
+| CMF Headphone Pro: real battery, firmware, noise control (ANC, Transparency, Off, strength) | Yes | Next update |
+| Any Bluetooth headphones: name and connected notification | Yes | Yes (plus battery when reported) |
+| Music controls: song, play/pause, next, previous | Any music app | Spotify and Apple Music |
+| Menu bar / tray panel, start at login, in-app updates, custom looks | Yes | Yes |
+| CMF Headphone Pro: EQ, custom EQ, spatial audio, low lag | After the Bluetooth capture confirms the commands | |
+
+Close the Nothing X app on your phone before connecting: the headphones accept one controller at a time.
 
 ---
 

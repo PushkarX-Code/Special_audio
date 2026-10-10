@@ -25,7 +25,7 @@ export class Session {
     this.seq = 0;
     this.queue = Promise.resolve();
     this.lastSend = 0;
-    this.waiters = new Map(); // seq -> resolve
+    this.waiters = new Map(); // seq -> { resolve, expect }
     this.listeners = { frame: new Set(), tx: new Set(), close: new Set(), error: new Set() };
     this.closed = false;
 
@@ -36,7 +36,7 @@ export class Session {
     transport.onData((chunk) => this.parser.push(chunk));
     transport.onClose((reason) => {
       this.closed = true;
-      this.waiters.forEach((resolve) => resolve(null));
+      this.waiters.forEach((w) => w.resolve(null));
       this.waiters.clear();
       this.#emit('close', reason);
     });
@@ -65,7 +65,9 @@ export class Session {
       this.seq = this.seq >= 250 ? 1 : this.seq + 1; // device wraps at 250 (S1, S2)
       const seq = this.seq;
       const bytes = encodeFrame(command, payload, seq);
-      const reply = new Promise((resolve) => this.waiters.set(seq, resolve));
+      // A GET 0xC0xx is answered by 0x40xx (S1, S2). Used as a fallback match if the device does not echo seq.
+      const expect = (command & 0xf000) === 0xc000 ? (command & 0x0fff) | 0x4000 : null;
+      const reply = new Promise((resolve) => this.waiters.set(seq, { resolve, expect }));
       this.lastSend = Date.now();
       this.#emit('tx', { command, name, bytes, attempt });
       await this.transport.send(bytes);
@@ -83,8 +85,9 @@ export class Session {
     // Unsolicited pushes (0xE0xx, 0x60xx) carry the device's own counter, so they never complete a request.
     const hi = frame.command >> 8;
     const isPush = hi === 0xe0 || hi === 0x60;
-    const resolve = isPush ? null : this.waiters.get(frame.seq);
-    if (resolve) { this.waiters.delete(frame.seq); resolve(frame); }
+    let seq = isPush ? null : this.waiters.has(frame.seq) ? frame.seq : null;
+    if (seq === null) for (const [s, w] of this.waiters) if (w.expect === frame.command) { seq = s; break; }
+    if (seq !== null) { const w = this.waiters.get(seq); this.waiters.delete(seq); w.resolve(frame); }
     this.#emit('frame', frame);
   }
 }

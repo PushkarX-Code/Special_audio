@@ -3,10 +3,14 @@ import { EQ_PRESETS } from './protocol/drafts.js';
 import { radioGroup } from './ui/controls.js';
 import { createHero } from './ui/hero.js';
 import { emit, listen, invoke } from './platform.js';
+import { createMusicBar } from './ui/music.js';
+import { applyLook, readLook } from './ui/look.js';
 
 const $ = (id) => document.getElementById(id);
 const panel = document.querySelector('.mini-panel');
+applyLook(readLook());
 const ring = createHero($('m-canvas'));
+createMusicBar($('m-music'), 3000);
 const send = (type, value) => emit('sa-command', { type, value });
 
 const noise = radioGroup($('m-noise'), (v) => send('noise', v));
@@ -18,8 +22,9 @@ $('m-eq').append(...EQ_PRESETS.map((p) => {
 const eq = radioGroup($('m-eq'), (v) => send('eq', v));
 $('m-open').addEventListener('click', () => invoke('open_main'));
 
-listen('sa-look', ({ theme }) => {
+listen('sa-look', ({ theme, ...look }) => {
   if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
+  applyLook({ ...readLook(), ...look });
   requestAnimationFrame(() => ring.refreshColors());
 });
 

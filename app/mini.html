@@ -6,7 +6,7 @@
   <title>Special Audio</title>
   <meta name="color-scheme" content="dark light">
   <link rel="stylesheet" href="styles/app.css">
-  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}</script>
+  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; for (const k of ['accent', 'dots', 'glass']) { const v = localStorage.getItem('look.' + k); if (v) document.documentElement.dataset[k] = v; } } catch {}</script>
   <script type="module" src="src/mini.js"></script>
 </head>
 <body class="mini">
@@ -33,6 +33,18 @@
     <section class="mini-section" id="m-eq-wrap" hidden>
       <span class="label">Sound</span>
       <div class="chips wrap" role="radiogroup" aria-label="EQ preset" id="m-eq"></div>
+    </section>
+
+    <section class="music mini-music" id="m-music" hidden aria-label="Now playing">
+      <div class="music-info">
+        <strong class="music-title" data-music-title></strong>
+        <span class="desc music-artist" data-music-artist></span>
+      </div>
+      <div class="music-buttons">
+        <button type="button" class="icon-btn" data-action="previous" aria-label="Previous"></button>
+        <button type="button" class="icon-btn play" data-action="toggle" aria-label="Play"></button>
+        <button type="button" class="icon-btn" data-action="next" aria-label="Next"></button>
+      </div>
     </section>
 
     <p class="hint" id="m-hint">Connect your headphones in Bluetooth settings.</p>

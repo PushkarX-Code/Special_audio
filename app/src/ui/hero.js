@@ -1,13 +1,12 @@
 // Hero canvas: battery gauge made of dots, the connecting silhouette, and the noise-control ring.
 // The gauge dots are particles. Connecting: they fly into a headphone silhouette. Connected: they
 // dissolve back into the ring and light up one by one to show the battery level.
-import { createLoop, fitCanvas, cssRgb, reducedMotion } from './motion.js';
+import { createLoop, fitCanvas, cssRgb, reducedMotion, dot } from './motion.js';
 
 const N = 72;           // gauge dots
 const RING_DOTS = 64;   // noise ring dots per layer
 const R_GAUGE = 0.335;  // radii as a fraction of canvas size
 const R_RING = 0.445;
-const RED = [215, 25, 33];
 
 // Headphone silhouette in unit space (centre 0,0; y down), exactly N points.
 function silhouette() {
@@ -53,6 +52,7 @@ const gaugePoint = (i, r = R_GAUGE) => {
 export function createHero(canvas) {
   let size = 1;
   let fg = [242, 242, 242];
+  let accent = [215, 25, 33];
   const ctx = fitCanvas(canvas, (w) => { size = w; loop.start(); });
   size = canvas.width;
 
@@ -101,7 +101,7 @@ export function createHero(canvas) {
     },
     setBattery(v) { level = v; relight(); loop.start(); },
     setNoise(v) { noise = v; loop.start(); },
-    refreshColors() { fg = cssRgb('--fg-rgb'); loop.start(); },
+    refreshColors() { fg = cssRgb('--fg-rgb'); accent = cssRgb('--accent-rgb'); loop.start(); },
   };
 
   const loop = createLoop((t, dt) => {
@@ -120,7 +120,7 @@ export function createHero(canvas) {
     const ringDot = (x, y, a, r = dotR, col = fg) => {
       if (a <= 0.004) return;
       ctx.fillStyle = `rgb(${col[0]} ${col[1]} ${col[2]} / ${a})`;
-      ctx.beginPath(); ctx.arc(c + x * s, c + y * s, r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); dot(ctx, c + x * s, c + y * s, r); ctx.fill();
     };
     for (let j = 0; j < RING_DOTS; j++) {
       const a = (j / RING_DOTS) * Math.PI * 2;
@@ -152,7 +152,7 @@ export function createHero(canvas) {
     P.forEach((p, i) => {
       if (now >= p.startAt && !rm) {
         // spring toward target
-        const k = 90, damp = 14;
+        const k = 150, damp = 19; // snappier settle, no wobble
         p.vx += ((p.tx * breathe - p.x) * k - p.vx * damp) * dt;
         p.vy += ((p.ty * breathe - p.y) * k - p.vy * damp) * dt;
         p.x += p.vx * dt; p.y += p.vy * dt;
@@ -172,7 +172,7 @@ export function createHero(canvas) {
         r = baseR * 0.85;
       } else {
         a = 0.13 + (level === -1 ? 0.37 : 0.87) * p.lit;
-        if (low && p.lit > 0.05) col = RED;
+        if (low && p.lit > 0.05) col = accent;
       }
       ringDot(p.x, p.y, a, r, col);
     });
@@ -181,8 +181,8 @@ export function createHero(canvas) {
     if (mode === 'connected' && level !== -1 && lead >= 0 && P[lead].lit > 0.5) {
       const p = P[lead];
       const glow = rm ? 0.5 : 0.5 + 0.25 * Math.sin(t * 3);
-      ringDot(p.x, p.y, 0.25 * glow, baseR * 2.4, RED);
-      ringDot(p.x, p.y, 1, baseR * 1.15, RED);
+      ringDot(p.x, p.y, 0.25 * glow, baseR * 2.4, accent);
+      ringDot(p.x, p.y, 1, baseR * 1.15, accent);
     }
 
     // keep running while anything moves or a ring animates

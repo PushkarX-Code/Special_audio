@@ -4,5 +4,7 @@
 <dict>
   <key>NSBluetoothAlwaysUsageDescription</key>
   <string>Special Audio talks to your CMF Headphone Pro over Bluetooth to read battery and change settings.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Special Audio shows the song playing in Spotify or Music and lets you play, pause and skip.</string>
 </dict>
 </plist>

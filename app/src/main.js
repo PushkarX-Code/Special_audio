@@ -1,6 +1,9 @@
 // App entry: wires the controller (device state) to the tabbed UI, the menu bar panel and the desktop shell.
 import { Controller } from './device/controller.js';
 import { MockHeadphones } from './device/mock.js';
+import { NativeHeadphones } from './device/native.js';
+import { createMusicBar } from './ui/music.js';
+import { ACCENTS, readLook, applyLook, saveLook } from './ui/look.js';
 import { EQ_PRESETS } from './protocol/drafts.js';
 import { createHero } from './ui/hero.js';
 import { createBackground } from './ui/background.js';
@@ -61,7 +64,7 @@ function applyTheme(v) {
   storeRaw('theme', v === 'system' ? null : v);
   theme.set(v);
   refreshColors();
-  emit('sa-look', { theme: v });
+  emit('sa-look', { theme: v, ...readLook() });
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', refreshColors);
 theme.set(document.documentElement.dataset.theme ?? 'system');
@@ -74,6 +77,24 @@ const motion = radioGroup($('motion-chips'), (v) => {
 });
 motion.set(document.documentElement.dataset.motion === 'reduced' ? 'reduced' : 'full');
 
+// Accent colour, dot shape and glass style. Shared with the menu bar panel.
+const look = readLook();
+applyLook(look);
+$('accent-chips').append(...Object.entries(ACCENTS).map(([name, rgb]) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'swatch'; b.setAttribute('role', 'radio'); b.dataset.value = name;
+  b.setAttribute('aria-label', name); b.style.setProperty('--swatch', `rgb(${rgb})`);
+  return b;
+}));
+for (const [key, id] of [['accent', 'accent-chips'], ['dots', 'dots-chips'], ['glass', 'glass-chips']]) {
+  const group = radioGroup($(id), (v) => {
+    look[key] = v; saveLook(key, v); applyLook(look); group.set(v); refreshColors();
+    emit('sa-look', { theme: document.documentElement.dataset.theme ?? 'system', ...look });
+  });
+  group.set(look[key]);
+}
+refreshColors();
+
 // ---- connection ----
 $('demo-btn').addEventListener('click', async () => {
   mock = new MockHeadphones();
@@ -84,9 +105,34 @@ $('bt-btn').addEventListener('click', () => invoke('open_bluetooth_settings'));
 if (!isDesktop) $('bt-btn').hidden = true;
 
 // Headphones connected in the OS (any brand). A demo session takes priority.
+// CMF Headphone Pro: open the private control channel automatically (desktop app).
+const CMF = /CMF Headphone Pro/i;
 let systemDevice = null;
+let controlError = null;
 const resync = () => controller.setSystemDevice(systemDevice);
-watchSystemHeadphones((dev) => { systemDevice = dev; resync(); });
+async function openControls(dev) {
+  if (!isDesktop || !dev?.address || !CMF.test(dev.name) || controller.session) return;
+  controlError = null;
+  try {
+    await controller.connect(new NativeHeadphones(dev));
+  } catch (e) {
+    controlError = e.message;
+    resync();
+  }
+}
+watchSystemHeadphones((dev) => {
+  const previous = systemDevice;
+  systemDevice = dev;
+  if (!dev && controller.state.kind === 'native') { controller.disconnect().then(resync); return; }
+  resync();
+  if (dev && dev.address !== previous?.address && controller.state.kind !== 'demo') openControls(dev);
+});
+$('retry-btn').addEventListener('click', () => openControls(systemDevice));
+createMusicBar($('music'));
+$('contact-btn').addEventListener('click', () => {
+  if (isDesktop) invoke('contact');
+  else location.href = `mailto:${['email.puskar', 'gmail.com'].join('@')}?subject=Special%20Audio`;
+});
 
 // Notification when headphones connect (real devices only, not the demo).
 let notifiedFor = null;
@@ -181,7 +227,6 @@ const publicState = (s) => ({
 
 // ---- render ----
 const STATUS_TEXT = { idle: 'Not connected', connecting: 'Connecting', reconnecting: 'Reconnecting', connected: 'Connected' };
-const CMF = /CMF Headphone Pro/i;
 let lastError = null;
 let lastEqKey;
 
@@ -209,13 +254,18 @@ controller.subscribe((s) => {
 
   $('idle-row').hidden = s.status !== 'idle';
   $('session-row').hidden = s.kind !== 'demo' || s.status === 'idle';
+  const isCmf = CMF.test(s.deviceName ?? '');
+  const systemHint = s.kind !== 'system' ? ''
+    : !isCmf ? 'Full controls are available for the CMF Headphone Pro.'
+      : !isDesktop ? '' : controlError ? `Couldn't open the controls. ${controlError}` : 'Opening the headphone controls…';
   $('hint').textContent = s.readOnlyReason
-    ?? (s.status === 'idle' ? (isDesktop ? 'Turn your headphones on and connect them in Bluetooth settings.' : 'Download the desktop app to connect your headphones.') : '');
+    ?? (s.status === 'idle' ? (isDesktop ? 'Turn your headphones on and connect them in Bluetooth settings.' : 'Download the desktop app to connect your headphones.') : systemHint);
+  $('retry-btn').hidden = !(s.kind === 'system' && isCmf && controlError);
 
   // Sound / Audiophile notice for headphones without a control channel
   const notice = !connected ? 'Connect your headphones to use these controls.'
     : s.kind !== 'system' ? ''
-      : CMF.test(s.deviceName ?? '') ? 'Controls for your CMF Headphone Pro arrive in the next update.'
+      : isCmf ? 'Connecting to the headphone controls. Check the Home tab if this stays.'
         : 'Full controls are available for the CMF Headphone Pro.';
   document.querySelectorAll('[data-notice]').forEach((el) => { el.textContent = notice; el.hidden = !notice; });
 

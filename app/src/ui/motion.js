@@ -55,6 +55,17 @@ export function fitCanvas(canvas, onResize) {
   return ctx;
 }
 
+// One dot, round or square (Look → Dot shape). Snapped to whole pixels so still dots stay crisp.
+export function dot(ctx, x, y, r) {
+  if (document.documentElement.dataset.dots === 'square') {
+    const s = Math.max(1, Math.round(r * 1.7));
+    ctx.rect(Math.round(x - s / 2), Math.round(y - s / 2), s, s);
+  } else {
+    ctx.moveTo(x + r, y);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+  }
+}
+
 // Read a "r g b" token from CSS custom properties.
 export function cssRgb(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim().split(/\s+/).map(Number);

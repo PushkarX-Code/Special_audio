@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Session } from '../app/src/device/session.js';
+import { encodeFrame } from '../app/src/protocol/frame.js';
 import { MockHeadphones } from '../app/src/device/mock.js';
 import { cmd } from '../app/src/protocol/commands.js';
 import { draftCmd } from '../app/src/protocol/drafts.js';
@@ -47,4 +48,15 @@ test('demo device: set noise control, then read back the confirmed state', async
   const reply = await s.request(cmd.getAnc());
   assert.deepEqual(parseFrame(reply), { anc: 'transparency' });
   await s.disconnect();
+});
+
+test('a GET reply is matched by its type when the device does not echo seq', async () => {
+  let onData = () => {};
+  const t = {
+    kind: 'serial', onData(cb) { onData = cb; }, onClose() {}, async connect() {}, async disconnect() {},
+    async send() { setTimeout(() => onData(encodeFrame(0x401e, [1, 0x07, 0], 99)), 20); }, // wrong seq
+  };
+  const s = new Session(t);
+  const reply = await s.request(cmd.getAnc());
+  assert.deepEqual(parseFrame(reply), { anc: 'transparency' });
 });
