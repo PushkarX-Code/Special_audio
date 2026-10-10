@@ -164,8 +164,11 @@ export class Controller {
   // Read everything we are allowed to read. Drafts are skipped on real hardware unless Experimental is on.
   async #readAll() {
     const allowDraft = this.#allowDraft();
+    // The model reply format is unverified: a misread would lock every control, so real headphones skip it
+    // (they are only opened when the OS reports the name "CMF Headphone Pro").
+    const demo = this.transport?.kind === 'demo';
     const reads = [
-      draftCmd.getModel(), cmd.getFirmware(), cmd.getBattery(), cmd.getAnc(),
+      ...(demo ? [draftCmd.getModel()] : []), cmd.getFirmware(), cmd.getBattery(), cmd.getAnc(),
       draftCmd.getEq(), draftCmd.getSpatial(), draftCmd.getLowLag(),
     ].filter((c) => isAllowed(c.command, { allowDraft }));
     for (const c of reads) {
@@ -225,6 +228,12 @@ export class Controller {
       }
       if (!this.session) return;
     }
+    if (real && this.session) this.#flash("The headphones didn't switch preset. This EQ command may not work on them yet.");
+  }
+
+  #flash(message) {
+    this.#set({ error: message });
+    setTimeout(() => this.state.error === message && this.#set({ error: null }), 3500);
   }
   setSpatial(mode) {
     if (!this.state.features.spatial) return;
