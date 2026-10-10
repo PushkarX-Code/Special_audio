@@ -4,9 +4,18 @@ A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, s
 
 > Unofficial. Not affiliated with Nothing Technology Ltd. Use at your own risk.
 
-![Special Audio, dark mode](docs/screenshots/desktop-dark.png)
+![Special Audio home screen: headphone name, live battery ring and noise control](docs/screenshots/home-dark.png)
 
-![Special Audio, light mode](docs/screenshots/desktop-light.png)
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/sound-dark.png" alt="Sound tab: EQ presets, custom EQ sliders with a saved preset, spatial audio"></td>
+    <td width="50%"><img src="docs/screenshots/home-light.png" alt="Home screen in light mode"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Sound</b>: presets, your own custom EQ, spatial audio</td>
+    <td align="center"><b>Light mode</b>, or follow your system</td>
+  </tr>
+</table>
 
 ## Download
 
