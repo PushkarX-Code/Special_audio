@@ -1,5 +1,6 @@
 // DRAFT outgoing commands: one source only, or the sources disagree.
-// The guard lets these reach the demo device only. They move to commands.js once the capture confirms them.
+// The guard lets these reach the demo device, or real headphones when the user turns on Settings → Experimental
+// controls. They move to commands.js once the capture confirms them.
 //   S1 = radiance-project/ear-web @ d076e13
 //   S2 = maniacx/BudsLink @ 13a234c
 
@@ -7,6 +8,7 @@ export const DOP = {
   GET_MODEL: 0xc01c,   // S2 DEVICE_MODEL_GET only
   GET_EQ: 0xc050,      // S1 getListeningMode(), S2 LISTENING_MODE_GET
   SET_EQ: 0xf01d,      // S1 setListeningMode(). S2 uses 0xF010 instead: conflict
+  SET_EQ_ALT: 0xf010,  // S2 LISTENING_MODE_SET. Tried only if SET_EQ doesn't change the preset
   GET_SPATIAL: 0xc04f, // S1 getSpatialAudio() only
   SET_SPATIAL: 0xf052, // S1 setSpatialAudio_BT() only
   GET_LOW_LAG: 0xc041, // S1 sendLatencyModeRead(), S2 LATENCY_GET. B175 support: S2 only
@@ -17,6 +19,7 @@ export const DRAFT_OUTGOING = {
   [DOP.GET_MODEL]: 'GET model',
   [DOP.GET_EQ]: 'GET eq preset',
   [DOP.SET_EQ]: 'SET eq preset',
+  [DOP.SET_EQ_ALT]: 'SET eq preset (alt)',
   [DOP.GET_SPATIAL]: 'GET spatial audio',
   [DOP.SET_SPATIAL]: 'SET spatial audio',
   [DOP.GET_LOW_LAG]: 'GET low lag',
@@ -42,10 +45,11 @@ export const LOW_LAG_BYTES = { on: 0x01, off: 0x02 };
 export const draftCmd = {
   getModel: () => ({ command: DOP.GET_MODEL, payload: [] }),
   getEq: () => ({ command: DOP.GET_EQ, payload: [] }),
-  setEq: (id) => {
+  setEq: (id, command = DOP.SET_EQ) => {
     const p = EQ_PRESETS.find((x) => x.id === id);
     if (!p) throw new Error(`unknown eq preset: ${id}`);
-    return { command: DOP.SET_EQ, payload: [p.index, 0x00] };
+    if (command !== DOP.SET_EQ && command !== DOP.SET_EQ_ALT) throw new Error('not an eq opcode');
+    return { command, payload: [p.index, 0x00] };
   },
   getSpatial: () => ({ command: DOP.GET_SPATIAL, payload: [] }),
   setSpatial: (mode) => {

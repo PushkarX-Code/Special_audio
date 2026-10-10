@@ -9,7 +9,8 @@ const ICONS = {
 };
 
 // root contains [data-music-title], [data-music-artist] and buttons with data-action previous|toggle|next.
-export function createMusicBar(root, everyMs = 2000) {
+// onPlaying(bool) is called whenever playback starts or stops.
+export function createMusicBar(root, everyMs = 2000, onPlaying = () => {}) {
   if (!isDesktop || !root) return;
   const title = root.querySelector('[data-music-title]');
   const artist = root.querySelector('[data-music-artist]');
@@ -18,12 +19,13 @@ export function createMusicBar(root, everyMs = 2000) {
   root.querySelector('[data-action="next"]').innerHTML = ICONS.next;
   let playing = false;
 
+  const setPlaying = (v) => { if (v !== playing) { playing = v; onPlaying(v); } };
   const render = (np) => {
     root.hidden = !np;
-    if (!np) return;
+    if (!np) { setPlaying(false); return; }
     title.textContent = np.title;
     artist.textContent = np.artist || np.source || '';
-    playing = np.playing;
+    setPlaying(!!np.playing);
     toggle.innerHTML = playing ? ICONS.pause : ICONS.play;
     toggle.setAttribute('aria-label', playing ? 'Pause' : 'Play');
     root.dataset.playing = String(playing);
@@ -40,7 +42,7 @@ export function createMusicBar(root, everyMs = 2000) {
   root.addEventListener('click', async (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (!action) return;
-    if (action === 'toggle') { playing = !playing; toggle.innerHTML = playing ? ICONS.pause : ICONS.play; }
+    if (action === 'toggle') { setPlaying(!playing); toggle.innerHTML = playing ? ICONS.pause : ICONS.play; }
     await invoke('media_control', { action });
     setTimeout(poll, 350);
   });

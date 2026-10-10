@@ -1,4 +1,5 @@
 // Desktop shell: main window, menu bar / tray mini panel, notifications, start at login and updates.
+mod audio;
 mod bluetooth;
 mod media;
 mod rfcomm;
@@ -165,7 +166,9 @@ pub fn run() {
             rfcomm_disconnect,
             now_playing,
             media_control,
-            contact
+            contact,
+            audio::visualizer_start,
+            audio::visualizer_stop
         ])
         .setup(|app| {
             let open = MenuItem::with_id(app, "open", "Open Special Audio", true, None::<&str>)?;

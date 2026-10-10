@@ -1,7 +1,9 @@
 // Hero canvas: battery gauge made of dots, the connecting silhouette, and the noise-control ring.
+// While music plays, the ring turns into a circular dot spectrum (bass at the bottom, treble at the top).
 // The gauge dots are particles. Connecting: they fly into a headphone silhouette. Connected: they
 // dissolve back into the ring and light up one by one to show the battery level.
 import { createLoop, fitCanvas, cssRgb, reducedMotion, dot } from './motion.js';
+import { BANDS } from './levels.js';
 
 const N = 72;           // gauge dots
 const RING_DOTS = 64;   // noise ring dots per layer
@@ -49,7 +51,7 @@ const gaugePoint = (i, r = R_GAUGE) => {
   return [r * Math.cos(a), r * Math.sin(a)];
 };
 
-export function createHero(canvas) {
+export function createHero(canvas, levels) {
   let size = 1;
   let fg = [242, 242, 242];
   let accent = [215, 25, 33];
@@ -69,6 +71,7 @@ export function createHero(canvas) {
   let noise = null;       // anc | transparency | off | null
   const ringW = { anc: 0, transparency: 0, off: 0, none: 1 };
   let modeSince = 0;
+  let specW = 0;           // 0..1, how much the spectrum has replaced the noise ring
 
   function retarget(points, stagger) {
     const now = performance.now();
@@ -101,6 +104,7 @@ export function createHero(canvas) {
     },
     setBattery(v) { level = v; relight(); loop.start(); },
     setNoise(v) { noise = v; loop.start(); },
+    wake() { loop.start(); },
     refreshColors() { fg = cssRgb('--fg-rgb'); accent = cssRgb('--accent-rgb'); loop.start(); },
   };
 
@@ -116,6 +120,10 @@ export function createHero(canvas) {
       const target = k === want ? 1 : 0;
       ringW[k] += (target - ringW[k]) * Math.min(1, dt * (rm ? 60 : 5));
     }
+    levels?.update(t);
+    const specOn = !rm && levels?.playing && mode !== 'connecting';
+    specW += ((specOn ? 1 : 0) - specW) * Math.min(1, dt * 3);
+    const ringFade = 1 - 0.8 * specW;
     const dotR = s * 0.0048;
     const ringDot = (x, y, a, r = dotR, col = fg) => {
       if (a <= 0.004) return;
@@ -126,20 +134,38 @@ export function createHero(canvas) {
       const a = (j / RING_DOTS) * Math.PI * 2;
       const cos = Math.cos(a), sin = Math.sin(a);
       // idle / off: still and dim
-      if (ringW.none > 0.01) ringDot(cos * R_RING, sin * R_RING, 0.07 * ringW.none);
-      if (ringW.off > 0.01) ringDot(cos * R_RING, sin * R_RING, 0.13 * ringW.off);
+      if (ringW.none > 0.01) ringDot(cos * R_RING, sin * R_RING, 0.07 * ringW.none * ringFade);
+      // Off: a comet of dots slowly circles the ring, its tail fading behind it
+      if (ringW.off > 0.01) {
+        const behind = rm ? 9 : (((t * 0.85 - a) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const tail = Math.max(0, 1 - behind / 1.4) ** 2;
+        ringDot(cos * R_RING, sin * R_RING, (0.1 + 0.75 * tail) * ringW.off * ringFade, dotR * (1 + 1.3 * tail));
+      }
       // ANC: tight ring pulsing inward, a slow wave travels around it
       if (ringW.anc > 0.01) {
         const pulse = rm ? 0.5 : 0.5 + 0.5 * Math.sin(t * 2.6 - j * 0.2);
         const r = R_RING - 0.028 * pulse;
-        ringDot(cos * r, sin * r, (0.32 + 0.4 * pulse) * ringW.anc, dotR * (0.9 + 0.35 * pulse));
+        ringDot(cos * r, sin * r, (0.32 + 0.4 * pulse) * ringW.anc * ringFade, dotR * (0.9 + 0.35 * pulse));
       }
       // Transparency: rings open outward and fade
       if (ringW.transparency > 0.01 && j % 2 === 0) {
         for (let k = 0; k < 3; k++) {
           const ph = rm ? k / 3 : (t * 0.28 + k / 3) % 1;
           const r = R_RING - 0.02 + ph * 0.06;
-          ringDot(cos * r, sin * r, (1 - ph) * 0.5 * ringW.transparency);
+          ringDot(cos * r, sin * r, (1 - ph) * 0.5 * ringW.transparency * ringFade);
+        }
+      }
+      // Spectrum: up to 4 dots stacked outward per angle. Mirrored left/right.
+      if (specW > 0.01) {
+        const fromBottom = Math.abs(((a - Math.PI / 2 + Math.PI * 3) % (Math.PI * 2)) - Math.PI) / Math.PI; // 0 bottom, 1 top
+        const bp = fromBottom * (BANDS - 1), b0 = Math.floor(bp), f = bp - b0;
+        const v = levels.bands[b0] * (1 - f) + (levels.bands[Math.min(BANDS - 1, b0 + 1)] ?? 0) * f;
+        const stack = v * 4;
+        for (let k = 0; k < 4; k++) {
+          const lit = Math.min(1, Math.max(0, stack - k));
+          const r = R_RING - 0.004 + k * 0.016;
+          const peak = k === 3 && lit > 0.5;
+          ringDot(cos * r, sin * r, (k === 0 ? 0.12 : 0) * specW + (0.85 - k * 0.12) * lit * specW, dotR * (1.3 - k * 0.1), peak ? accent : fg);
         }
       }
     }
@@ -186,7 +212,7 @@ export function createHero(canvas) {
     }
 
     // keep running while anything moves or a ring animates
-    const ringAnimating = !rm && (ringW.anc > 0.01 || ringW.transparency > 0.01);
+    const ringAnimating = !rm && (ringW.anc > 0.01 || ringW.transparency > 0.01 || ringW.off > 0.01 || specW > 0.01 || specOn);
     const settling = Object.entries(ringW).some(([k, v]) => Math.abs(v - (k === want ? 1 : 0)) > 0.01);
     return moving || ringAnimating || settling || mode === 'connecting' || (mode === 'idle' && !rm) || t - modeSince < 1;
   });
