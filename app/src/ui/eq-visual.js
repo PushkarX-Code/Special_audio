@@ -20,6 +20,12 @@ function sample(points, x) { // x 0..1, smooth interpolation through the control
   return points[i] + (points[i + 1] - points[i]) * e;
 }
 
+// Three bands (-6..6 dB) spread over the five control points.
+function customShape([b, m, t]) {
+  const n = (v) => (v / 6) * 0.8;
+  return [n(b), (n(b) + n(m)) / 2, n(m), (n(m) + n(t)) / 2, n(t)];
+}
+
 export function createEqVisual(canvas) {
   let w = 1, h = 1, fg = [242, 242, 242];
   const ctx = fitCanvas(canvas, (W, H) => { w = W; h = H; loop.start(); });
@@ -52,9 +58,10 @@ export function createEqVisual(canvas) {
   });
 
   return {
+    // id: a preset name, or [bass, mid, treble] in dB for a custom EQ.
     set(id, isActive = true) {
       active = isActive && !!id;
-      const shape = EQ_SHAPES[id] ?? EQ_SHAPES.none;
+      const shape = Array.isArray(id) ? customShape(id) : EQ_SHAPES[id] ?? EQ_SHAPES.none;
       const now = performance.now();
       for (let i = 0; i < COLS; i++) {
         tgt[i] = sample(shape, i / (COLS - 1));
