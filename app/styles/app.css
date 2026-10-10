@@ -140,14 +140,17 @@ h1, h2, p { margin: 0; }
 }
 @media (min-width: 780px) {
   .app {
-    max-width: 900px;
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+    max-width: 1080px;
+    padding-left: 32px; padding-right: 32px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: "top top" "hero cards" "hero foot";
-    column-gap: 28px;
+    column-gap: 48px;
     align-items: start;
   }
   .top { grid-area: top; }
-  .hero { grid-area: hero; position: sticky; top: 24px; }
+  /* desktop: the gauge sits centred in the left half while the controls scroll on the right */
+  .hero { grid-area: hero; position: sticky; top: 24px; min-height: calc(100vh - 110px); justify-content: center; }
+  .gauge { width: min(100%, 360px); }
   .cards { grid-area: cards; }
   .foot { grid-area: foot; }
 }
