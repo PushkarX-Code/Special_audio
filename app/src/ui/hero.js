@@ -81,7 +81,8 @@ export function createHero(canvas) {
 
   function relight() {
     const now = performance.now();
-    const lit = level == null || mode !== 'connected' ? 0 : Math.round((level / 100) * N);
+    // level -1: connected but the headphones don't report battery. The whole ring glows softly.
+    const lit = level == null || mode !== 'connected' ? 0 : level === -1 ? N : Math.round((level / 100) * N);
     P.forEach((p, i) => {
       const target = i < lit ? 1 : 0;
       if (target !== p.litTarget) { p.litTarget = target; p.litAt = now + (reducedMotion() ? 0 : i * 14); }
@@ -145,7 +146,7 @@ export function createHero(canvas) {
 
     // --- gauge particles ---
     const breathe = mode === 'idle' && !rm ? 1 + 0.012 * Math.sin(t * 1.4) : 1;
-    const low = level != null && level <= 20;
+    const low = level != null && level >= 0 && level <= 20;
     let lead = -1;
     let moving = false;
     P.forEach((p, i) => {
@@ -170,14 +171,14 @@ export function createHero(canvas) {
         a = shimmer;
         r = baseR * 0.85;
       } else {
-        a = 0.13 + 0.87 * p.lit;
+        a = 0.13 + (level === -1 ? 0.37 : 0.87) * p.lit;
         if (low && p.lit > 0.05) col = RED;
       }
       ringDot(p.x, p.y, a, r, col);
     });
 
     // the single red hero dot marks the end of the battery fill
-    if (mode === 'connected' && lead >= 0 && P[lead].lit > 0.5) {
+    if (mode === 'connected' && level !== -1 && lead >= 0 && P[lead].lit > 0.5) {
       const p = P[lead];
       const glow = rm ? 0.5 : 0.5 + 0.25 * Math.sin(t * 3);
       ringDot(p.x, p.y, 0.25 * glow, baseR * 2.4, RED);

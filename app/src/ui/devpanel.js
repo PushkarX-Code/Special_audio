@@ -6,16 +6,16 @@ const ARROW = { tx: '→', rx: '←', err: '!', info: '·' };
 
 export function createDevPanel({ controller, getMock }) {
   const panel = document.getElementById('devpanel');
-  const btn = document.getElementById('dev-btn');
   const log = document.getElementById('log');
   const details = document.getElementById('dev-details');
   const demoActions = document.getElementById('demo-actions');
 
-  btn.addEventListener('click', () => {
-    const open = panel.hidden;
-    panel.hidden = !open;
-    btn.setAttribute('aria-expanded', String(open));
-    if (open) { renderAll(); log.scrollTop = log.scrollHeight; }
+  // Hidden from normal users: Ctrl+Shift+D (Cmd+Shift+D on Mac) toggles it.
+  window.addEventListener('keydown', (e) => {
+    if (!((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd')) return;
+    e.preventDefault();
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) { renderAll(); log.scrollTop = log.scrollHeight; }
   });
 
   const row = (e) => {
@@ -43,7 +43,7 @@ export function createDevPanel({ controller, getMock }) {
   document.getElementById('log-clear').addEventListener('click', () => { controller.log.length = 0; log.replaceChildren(); });
   document.getElementById('log-copy').addEventListener('click', async () => {
     const text = controller.log.map((e) => `${time(e.t)} ${ARROW[e.dir]} ${e.label}${e.hex ? '  ' + e.hex : ''}`).join('\n');
-    try { await navigator.clipboard.writeText(text); btn.dispatchEvent(new CustomEvent('toast', { bubbles: true, detail: 'Log copied' })); } catch {}
+    try { await navigator.clipboard.writeText(text); panel.dispatchEvent(new CustomEvent('toast', { bubbles: true, detail: 'Log copied' })); } catch {}
   });
 
   demoActions.addEventListener('click', (e) => {

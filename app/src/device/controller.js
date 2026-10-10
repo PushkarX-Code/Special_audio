@@ -14,7 +14,7 @@ const LOG_LIMIT = 400;
 
 const initialState = () => ({
   status: 'idle',          // idle | connecting | connected | reconnecting
-  kind: null,              // demo | serial | native
+  kind: null,              // demo | serial | native | system (OS-connected headphones, no control channel)
   deviceName: null,
   model: null,
   firmware: null,
@@ -24,7 +24,8 @@ const initialState = () => ({
   eq: null,
   spatial: null,
   lowLag: null,
-  features: { anc: false, eq: false, spatial: false, lowLag: false },
+  customEq: [0, 0, 0],     // bass, mid, treble in dB
+  features: { anc: false, eq: false, customEq: false, spatial: false, lowLag: false },
   readOnlyReason: null,
   error: null,
 });
@@ -105,7 +106,7 @@ export class Controller {
     const transport = this.transport;
     if (!transport) return; // user asked for it
     this.pending = {};
-    this.#set({ status: 'reconnecting', features: { anc: false, eq: false, spatial: false, lowLag: false } });
+    this.#set({ status: 'reconnecting', features: { anc: false, eq: false, customEq: false, spatial: false, lowLag: false } });
     this.#reconnect(transport, 0);
   }
 
@@ -134,12 +135,14 @@ export class Controller {
   // Which controls can be written on this transport: real hardware gets CONFIRMED opcodes only.
   #features() {
     const allowDraft = this.transport?.kind === 'demo';
-    if (this.state.readOnlyReason) return { anc: false, eq: false, spatial: false, lowLag: false };
+    if (this.state.readOnlyReason) return { anc: false, eq: false, customEq: false, spatial: false, lowLag: false };
     return {
       anc: isAllowed(OP.SET_ANC, { allowDraft }),
       eq: isAllowed(DOP.SET_EQ, { allowDraft }),
       spatial: isAllowed(DOP.SET_SPATIAL, { allowDraft }),
       lowLag: isAllowed(DOP.SET_LOW_LAG, { allowDraft }),
+      // Custom EQ bytes are not confirmed for any source yet: demo device only.
+      customEq: allowDraft,
     };
   }
 
@@ -204,5 +207,23 @@ export class Controller {
     if (!this.state.features.lowLag) return;
     return this.#write(['lowLag'], { lowLag: on }, draftCmd.setLowLag(on), draftCmd.getLowLag());
   }
+  // Demo device only for now: the custom EQ command is not confirmed (see docs/protocol-research.md).
+  setCustomEq(bands) {
+    if (!this.state.features.customEq) return;
+    this.#set({ customEq: bands.map(Number), eq: 'custom' });
+  }
+
+  // Headphones the operating system has connected (any brand). Used when no control session is open.
+  setSystemDevice(dev) {
+    if (this.session) return;
+    if (!dev) {
+      if (this.state.kind === 'system') this.#set(initialState());
+      return;
+    }
+    const battery = dev.battery == null ? null : { level: dev.battery, charging: false };
+    const same = this.state.kind === 'system' && this.state.deviceName === dev.name && this.state.battery?.level === battery?.level;
+    if (!same) this.#set({ ...initialState(), status: 'connected', kind: 'system', deviceName: dev.name, battery });
+  }
+
   refreshBattery() { return this.session?.request(cmd.getBattery()).catch(() => {}); }
 }

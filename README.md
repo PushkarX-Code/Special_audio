@@ -57,17 +57,29 @@ There's no warning because the warning only appears for files downloaded through
 - The installers are built by GitHub's own servers from this code, not on someone's computer: see [Actions](https://github.com/PushkarX-Code/Special_audio/actions).
 - The app has no account, no sign-in, no tracking and no internet connection. It only talks to your headphones.
 
+## What's inside
+
+| Tab | What it does |
+|---|---|
+| **Home** | Headphone name, live battery ring, noise control, quick sound presets |
+| **Sound** | EQ presets, custom EQ (bass, mid, treble) with presets you name and save, spatial audio |
+| **Audiophile** | Low lag mode, high quality audio, Dirac Opteo, device details |
+| **Look** | Light, dark or system theme, full or calm animation |
+| **Settings** | Start at login, connection notifications, updates |
+
+It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control and sound presets.
+
+**Updates install from inside the app.** It checks on launch, or go to Settings → Updates → Check now.
+
 ## What works today
 
-| Feature | Status |
+| | Status |
 |---|---|
-| App installs and opens on Windows and Mac | Yes |
-| Demo mode: try every screen without headphones | Yes |
-| Connect to real headphones | Coming next |
-| Battery, firmware, noise control on real headphones | After connecting works |
-| EQ, spatial audio, Low Lag on real headphones | After the Bluetooth capture confirms the commands |
-
-Click **Demo mode** on the first screen to try it.
+| Any Bluetooth headphones: name, connected notification, battery (Mac, when the headphones report it) | Yes |
+| Menu bar / tray panel, start at login, in-app updates | Yes |
+| Demo: try every control without headphones (Home → Try demo) | Yes |
+| CMF Headphone Pro: battery and noise control | Next update |
+| CMF Headphone Pro: EQ, custom EQ, spatial audio, low lag | After the Bluetooth capture confirms the commands |
 
 ---
 

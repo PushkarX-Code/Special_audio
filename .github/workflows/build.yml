@@ -64,6 +64,9 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Signs the in-app updates (not an Apple/Microsoft certificate). Set once in repo Settings → Secrets.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         with:
           args: ${{ matrix.args }}
           # Publish a release only from the button or a tag, never from a pull request.
@@ -73,7 +76,7 @@ jobs:
             **How to install:** follow the [Download](https://github.com/PushkarX-Code/Special_audio#download) steps in the README.
             Windows → `Special-Audio-windows-setup.exe`. Mac → `Special-Audio-mac.dmg`.
             The first time, your computer warns that the app is from an unknown developer. The README shows what to click, or how to install with one command and skip the warning.
-            This build runs in Demo mode. The real headphone connection comes in a later release.
+            Already installed? The app updates itself: open Settings → Updates → Check now.
           releaseDraft: false
           prerelease: false
 

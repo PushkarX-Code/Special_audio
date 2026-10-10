@@ -1,7 +1,8 @@
 // Shared motion helpers: reduced-motion flag and an animation loop that pauses when the window is hidden.
 
 const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
-export const reducedMotion = () => rm.matches;
+// System setting, or the app's own Look → Animation → Calm.
+export const reducedMotion = () => rm.matches || document.documentElement.dataset.motion === 'reduced';
 export const onReducedMotionChange = (fn) => rm.addEventListener('change', fn);
 
 const loops = new Set();

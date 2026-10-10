@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Special Audio</title>
+  <meta name="color-scheme" content="dark light">
+  <link rel="stylesheet" href="styles/app.css">
+  <script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}</script>
+  <script type="module" src="src/mini.js"></script>
+</head>
+<body class="mini">
+  <div class="mini-panel app" data-status="idle">
+    <header class="mini-head">
+      <span class="status-dot"></span>
+      <div class="mini-title">
+        <span class="label" id="m-status">Not connected</span>
+        <strong class="dot" id="m-name">No headphones</strong>
+      </div>
+      <div class="mini-gauge"><canvas id="m-canvas"></canvas><span class="dot" id="m-pct"></span></div>
+    </header>
+
+    <section class="mini-section" id="m-noise-wrap" hidden>
+      <span class="label">Noise control</span>
+      <div class="segmented" role="radiogroup" aria-label="Noise control" id="m-noise">
+        <span class="seg-thumb" aria-hidden="true"></span>
+        <button type="button" role="radio" data-value="anc">ANC</button>
+        <button type="button" role="radio" data-value="transparency">Transp.</button>
+        <button type="button" role="radio" data-value="off">Off</button>
+      </div>
+    </section>
+
+    <section class="mini-section" id="m-eq-wrap" hidden>
+      <span class="label">Sound</span>
+      <div class="chips wrap" role="radiogroup" aria-label="EQ preset" id="m-eq"></div>
+    </section>
+
+    <p class="hint" id="m-hint">Connect your headphones in Bluetooth settings.</p>
+    <button type="button" class="pill" id="m-open">Open Special Audio</button>
+  </div>
+</body>
+</html>
