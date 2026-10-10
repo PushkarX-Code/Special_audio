@@ -278,8 +278,10 @@ h1, h2, p { margin: 0; }
 
 /* disabled states: not connected / no control channel, or the feature is not verified on real hardware */
 .card[data-unavailable="true"] { opacity: 0.45; }
-.card[data-locked="true"] .lock::before { content: "Turn on in Settings → Experimental"; }
-.card[data-locked="true"] { opacity: 0.6; }
+.card[data-locked="true"] .lock::before { content: "Not confirmed yet"; }
+.card[data-locked="true"] > :not(.unlock-btn):not(.card-head) { opacity: 0.45; pointer-events: none; }
+.unlock-btn { display: none; margin-top: 14px; }
+.card[data-locked="true"] .unlock-btn { display: inline-flex; align-items: center; }
 
 /* ---------- segmented control ---------- */
 .segmented {

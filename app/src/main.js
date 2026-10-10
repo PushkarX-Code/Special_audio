@@ -212,11 +212,23 @@ renderMyPresets();
 controller.eqSetOp = prefs.get('eqSetOp', DOP.SET_EQ);
 controller.onEqOpLearned = (op) => prefs.set('eqSetOp', op);
 const exp = switchControl($('exp-switch'), (on) => {
-  prefs.set('experimental', on); exp.set(on); controller.setExperimental(on);
+  setExperimental(on);
   if (on) toast('Experimental controls on. If something looks wrong, turn this off.');
 });
+function setExperimental(on) {
+  prefs.set('experimental', on); exp.set(on); controller.setExperimental(on);
+}
 exp.set(prefs.get('experimental', false));
 controller.setExperimental(prefs.get('experimental', false));
+// Locked cards get a one-click unlock instead of sending people to Settings.
+for (const card of document.querySelectorAll('.card[data-feature]')) {
+  if (card.dataset.feature === 'anc' || card.dataset.feature === 'customEq') continue; // custom EQ: demo only
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'pill small unlock-btn';
+  b.textContent = 'Unlock (experimental)';
+  b.addEventListener('click', () => { setExperimental(true); toast('Experimental controls on. Turn off any time in Settings.'); });
+  card.append(b);
+}
 const notif = switchControl($('notif-switch'), (on) => { prefs.set('notify', on); notif.set(on); });
 notif.set(prefs.get('notify', true));
 const login = switchControl($('login-switch'), async (on) => {
