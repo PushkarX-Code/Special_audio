@@ -70,7 +70,7 @@ jobs:
             This build runs in Demo mode. The real headphone connection comes in the next release.
             Not signed yet: see the README "Install" section for the one-time security prompt.
           releaseDraft: false
-          prerelease: true
+          prerelease: false
 
       - uses: actions/upload-artifact@v4
         with:

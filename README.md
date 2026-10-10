@@ -10,7 +10,7 @@ A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, s
 
 ## Download
 
-1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases/latest)**.
+1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases)**.
 2. Scroll to **Assets** at the bottom of the newest release.
 3. Click the file for your computer to download it:
 
