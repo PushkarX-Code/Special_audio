@@ -1,0 +1,12 @@
+# Raw Bluetooth captures contain MAC addresses, device names and serial numbers.
+# Only scrubbed frames under test/fixtures/ are committed.
+*.log
+*.cfa
+*.pcap
+*.pcapng
+*.btsnoop
+bugreport*.zip
+captures/
+
+.DS_Store
+node_modules/

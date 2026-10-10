@@ -1,0 +1,12 @@
+{
+  "name": "special-audio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unofficial desktop companion for the CMF Headphone Pro.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "start": "node tools/serve.js"
+  }
+}
