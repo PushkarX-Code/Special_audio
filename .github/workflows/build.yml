@@ -23,6 +23,7 @@ jobs:
       - run: npm test
 
   build:
+    name: build (${{ matrix.platform }})
     needs: test
     strategy:
       fail-fast: false

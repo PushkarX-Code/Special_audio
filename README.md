@@ -4,20 +4,20 @@ A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, s
 
 > Unofficial. Not affiliated with Nothing Technology Ltd. Use at your own risk.
 
-<p align="center">
-  <img src="docs/screenshots/main-dark.png" width="260" alt="Main screen, dark mode">
-  <img src="docs/screenshots/controls-dark.png" width="260" alt="Controls in use">
-  <img src="docs/screenshots/main-light.png" width="260" alt="Main screen, light mode">
-</p>
+![Special Audio, dark mode](docs/screenshots/desktop-dark.png)
+
+![Special Audio, light mode](docs/screenshots/desktop-light.png)
 
 ## Download
 
-**[Download the latest version](https://github.com/PushkarX-Code/Special_audio/releases/latest)**
+1. Open the **[Releases page](https://github.com/PushkarX-Code/Special_audio/releases/latest)**.
+2. Scroll to **Assets** at the bottom of the newest release.
+3. Click the file for your computer to download it:
 
-| Your computer | File to download |
+| Your computer | Click this file |
 |---|---|
-| Windows 10 or 11 | `Special.Audio_x.x.x_x64-setup.exe` |
-| Mac (Apple Silicon or Intel) | `Special.Audio_x.x.x_universal.dmg` |
+| Windows 10 or 11 | the one ending in **`x64-setup.exe`** |
+| Mac (Apple Silicon or Intel) | the one ending in **`universal.dmg`** |
 
 ## Install
 
