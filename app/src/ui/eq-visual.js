@@ -1,6 +1,6 @@
 // Small dot-matrix picture of the EQ curve. It morphs column by column when the preset changes.
 // The curves are illustrative shapes, not measured responses from the headphones.
-import { createLoop, fitCanvas, cssRgb, reducedMotion } from './motion.js';
+import { createLoop, fitCanvas, cssRgb, reducedMotion, dot } from './motion.js';
 
 const COLS = 28, ROWS = 7;
 // bass -> treble, -1..1
@@ -51,7 +51,7 @@ export function createEqVisual(canvas) {
         const on = d < 0.5 ? 1 : d < 1.2 ? 0.35 : 0;
         const a = active ? 0.1 + 0.85 * on : 0.08 + 0.12 * on;
         ctx.fillStyle = `rgb(${fg[0]} ${fg[1]} ${fg[2]} / ${a})`;
-        ctx.beginPath(); ctx.arc(gx * (i + 0.5), gy * (j + 0.5), r * (on > 0.9 && active ? 1.25 : 1), 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); dot(ctx, Math.round(gx * (i + 0.5)), Math.round(gy * (j + 0.5)), r * (on > 0.9 && active ? 1.25 : 1)); ctx.fill();
       }
     }
     return moving;

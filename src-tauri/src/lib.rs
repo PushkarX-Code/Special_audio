@@ -1,5 +1,7 @@
 // Desktop shell: main window, menu bar / tray mini panel, notifications, start at login and updates.
 mod bluetooth;
+mod media;
+mod rfcomm;
 
 use tauri::{
     menu::{Menu, MenuItem},
@@ -15,6 +17,45 @@ use tauri_plugin_updater::UpdaterExt;
 #[tauri::command]
 async fn audio_devices() -> Vec<bluetooth::AudioDevice> {
     tauri::async_runtime::spawn_blocking(bluetooth::connected).await.unwrap_or_default()
+}
+
+#[tauri::command]
+async fn rfcomm_connect(app: AppHandle, address: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || rfcomm::connect(app, &address))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+async fn rfcomm_send(bytes: Vec<u8>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || rfcomm::send(&bytes)).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+fn rfcomm_disconnect() {
+    rfcomm::disconnect();
+}
+
+#[tauri::command]
+async fn now_playing() -> Option<media::NowPlaying> {
+    tauri::async_runtime::spawn_blocking(media::now_playing).await.ok().flatten()
+}
+
+#[tauri::command]
+async fn media_control(action: String) -> bool {
+    tauri::async_runtime::spawn_blocking(move || media::control(&action)).await.unwrap_or(false)
+}
+
+/// Opens the user's mail app addressed to the developer. The address is not shown in the app.
+#[tauri::command]
+fn contact() {
+    let url = concat!("mailto:", "email.puskar", "@", "gmail.com", "?subject=Special%20Audio");
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("open").arg(url).spawn();
+    #[cfg(windows)]
+    let _ = std::process::Command::new("cmd").args(["/C", "start", "", url]).spawn();
+    #[cfg(not(any(target_os = "macos", windows)))]
+    let _ = url;
 }
 
 #[tauri::command]
@@ -118,7 +159,13 @@ pub fn run() {
             autostart_set,
             app_version,
             open_main,
-            check_for_update
+            check_for_update,
+            rfcomm_connect,
+            rfcomm_send,
+            rfcomm_disconnect,
+            now_playing,
+            media_control,
+            contact
         ])
         .setup(|app| {
             let open = MenuItem::with_id(app, "open", "Open Special Audio", true, None::<&str>)?;

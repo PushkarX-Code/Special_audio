@@ -14,6 +14,7 @@
     try {
       const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
       if (localStorage.getItem('motion') === 'reduced') document.documentElement.dataset.motion = 'reduced';
+      for (const k of ['accent', 'dots', 'glass']) { const v = localStorage.getItem('look.' + k); if (v) document.documentElement.dataset[k] = v; }
     } catch {}
   </script>
   <script type="module" src="src/main.js"></script>
@@ -72,6 +73,7 @@
             <button class="pill" id="disconnect-btn" type="button">Exit demo</button>
           </div>
           <p class="hint" id="hint"></p>
+          <button class="pill small" id="retry-btn" type="button" hidden>Try again</button>
         </div>
 
         <div class="cards">
@@ -91,6 +93,19 @@
               <button type="button" role="radio" class="chip small" data-value="mid">Mid</button>
               <button type="button" role="radio" class="chip small" data-value="low">Low</button>
               <button type="button" role="radio" class="chip small" data-value="adaptive">Adaptive</button>
+            </div>
+          </section>
+
+          <section class="card music" id="music" hidden aria-label="Now playing">
+            <div class="music-info">
+              <span class="label">Now playing</span>
+              <strong class="music-title" data-music-title></strong>
+              <span class="desc music-artist" data-music-artist></span>
+            </div>
+            <div class="music-buttons">
+              <button type="button" class="icon-btn" data-action="previous" aria-label="Previous"></button>
+              <button type="button" class="icon-btn play" data-action="toggle" aria-label="Play"></button>
+              <button type="button" class="icon-btn" data-action="next" aria-label="Next"></button>
             </div>
           </section>
 
@@ -201,7 +216,25 @@
               <button type="button" role="radio" class="chip" data-value="reduced">Calm</button>
             </div>
           </section>
-          <p class="hint span-2">More styles (accent colour, dot shape, gauge styles) are coming in a later update.</p>
+          <section class="card" aria-labelledby="accent-title">
+            <div class="card-head"><h2 class="label" id="accent-title">Accent colour</h2></div>
+            <div class="chips swatches" role="radiogroup" aria-labelledby="accent-title" id="accent-chips"></div>
+          </section>
+          <section class="card" aria-labelledby="dots-title">
+            <div class="card-head"><h2 class="label" id="dots-title">Dot shape</h2></div>
+            <div class="chips" role="radiogroup" aria-labelledby="dots-title" id="dots-chips">
+              <button type="button" role="radio" class="chip" data-value="round">Round</button>
+              <button type="button" role="radio" class="chip" data-value="square">Square</button>
+            </div>
+          </section>
+          <section class="card span-2" aria-labelledby="glass-title">
+            <div class="card-head"><h2 class="label" id="glass-title">Glass</h2></div>
+            <div class="chips" role="radiogroup" aria-labelledby="glass-title" id="glass-chips">
+              <button type="button" role="radio" class="chip" data-value="clear">Clear</button>
+              <button type="button" role="radio" class="chip" data-value="frosted">Frosted</button>
+              <button type="button" role="radio" class="chip" data-value="solid">Solid</button>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -225,6 +258,10 @@
             <div class="card-head"><h2 class="label" id="about-title">About</h2></div>
             <p class="desc">Special Audio is a free, open-source app. Unofficial. Not affiliated with Nothing Technology Ltd. Use at your own risk.</p>
             <p class="desc"><a class="link" href="https://github.com/PushkarX-Code/Special_audio" target="_blank" rel="noopener">github.com/PushkarX-Code/Special_audio</a></p>
+          </section>
+          <section class="card row" aria-labelledby="contact-title">
+            <div><div class="card-head"><h2 class="label" id="contact-title">Contact us</h2></div><p class="desc">Questions, ideas or a bug? Send us a message.</p></div>
+            <button type="button" class="pill small" id="contact-btn">Contact us</button>
           </section>
         </div>
       </section>

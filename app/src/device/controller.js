@@ -178,7 +178,8 @@ export class Controller {
     const clear = () => { keys.forEach((k) => delete this.pending[k]); this.#notify(); };
     const timer = setTimeout(clear, OPTIMISTIC_MS);
     try {
-      await this.session.request(setCmd);
+      // Some devices may not acknowledge a SET; the read-back below is what confirms it.
+      await this.session.request(setCmd).catch((e) => this.#log({ dir: 'err', label: e.message }));
       await this.session.request(getCmd);
     } catch (err) {
       this.#set({ error: `${err.message}` });

@@ -1,5 +1,5 @@
 // Subtle dot grid behind everything, drifting a few pixels with the pointer (parallax).
-import { createLoop, fitCanvas, cssRgb, reducedMotion } from './motion.js';
+import { createLoop, fitCanvas, cssRgb, reducedMotion, dot } from './motion.js';
 
 const SPACING = 22;  // css px
 const SHIFT = 10;    // max parallax offset, css px
@@ -26,7 +26,7 @@ export function createBackground(canvas) {
     const r = 0.9 * dpr;
     ctx.beginPath();
     for (let y = oy - step; y < h + step; y += step) {
-      for (let x = ox - step; x < w + step; x += step) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
+      for (let x = ox - step; x < w + step; x += step) dot(ctx, x, y, r);
     }
     ctx.fill();
     return Math.abs(target.x - pos.x) + Math.abs(target.y - pos.y) > 0.05; // stop when settled
