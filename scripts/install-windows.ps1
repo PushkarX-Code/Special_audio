@@ -10,14 +10,21 @@ $ProgressPreference = 'SilentlyContinue'   # makes Invoke-WebRequest much faster
 
 $repo = 'PushkarX-Code/Special_audio'
 
-Write-Host 'Finding the latest Special Audio release...' -ForegroundColor White
-$release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'special-audio-installer' }
-$asset = $release.assets | Where-Object { $_.name -like '*x64-setup.exe' } | Select-Object -First 1
-if (-not $asset) { throw "Could not find the Windows download. Check https://github.com/$repo/releases" }
-
-$installer = Join-Path $env:TEMP $asset.name
-Write-Host "Downloading $($asset.name)..."
-Invoke-WebRequest $asset.browser_download_url -OutFile $installer -UseBasicParsing
+$installer = Join-Path $env:TEMP 'Special-Audio-windows-setup.exe'
+Write-Host 'Downloading the latest Special Audio...' -ForegroundColor White
+try {
+  # Newest release under its fixed name. No GitHub API call, so no rate limit.
+  Invoke-WebRequest "https://github.com/$repo/releases/latest/download/Special-Audio-windows-setup.exe" -OutFile $installer -UseBasicParsing
+} catch {
+  # Older releases only have the versioned file name: read the version from the
+  # /releases/latest redirect (.../tag/v1.2.3) and build that name.
+  $page = Invoke-WebRequest "https://github.com/$repo/releases/latest" -UseBasicParsing
+  $final = if ($page.BaseResponse.ResponseUri) { $page.BaseResponse.ResponseUri.AbsoluteUri } else { $page.BaseResponse.RequestMessage.RequestUri.AbsoluteUri }
+  $tag = $final.TrimEnd('/').Split('/')[-1]
+  if ($tag -notlike 'v*') { throw "Could not find the Windows download. Check https://github.com/$repo/releases" }
+  $version = $tag.Substring(1)
+  Invoke-WebRequest "https://github.com/$repo/releases/download/$tag/Special.Audio_${version}_x64-setup.exe" -OutFile $installer -UseBasicParsing
+}
 Unblock-File $installer
 
 Write-Host 'Installing...'

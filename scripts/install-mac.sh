@@ -16,19 +16,22 @@ fail() { printf '\033[31m%s\033[0m\n' "$*" >&2; exit 1; }
 
 [ "$(uname -s)" = "Darwin" ] || fail "This installer is for macOS."
 
-say "Finding the latest Special Audio release..."
-URL=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-  | grep -o '"browser_download_url": *"[^"]*universal\.dmg"' \
-  | head -1 | sed 's/.*"\(https[^"]*\)"/\1/')
-[ -n "$URL" ] || fail "Could not find the Mac download. Check https://github.com/$REPO/releases"
-
 TMP=$(mktemp -d)
 MOUNT="$TMP/mount"
 cleanup() { hdiutil detach "$MOUNT" -quiet 2>/dev/null || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 
-say "Downloading $(basename "$URL")..."
-curl -fL --progress-bar -o "$TMP/app.dmg" "$URL"
+# Newest release under its fixed name. No GitHub API call, so no rate limit.
+URL="https://github.com/$REPO/releases/latest/download/Special-Audio-mac.dmg"
+say "Downloading the latest Special Audio..."
+if ! curl -fL --progress-bar -o "$TMP/app.dmg" "$URL"; then
+  # Older releases only have the versioned file name: read the version from the
+  # /releases/latest redirect (…/tag/v1.2.3) and build that name.
+  TAG=$(curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest" | sed 's#.*/tag/##')
+  [ -n "$TAG" ] && [ "$TAG" != "${TAG#v}" ] || fail "Could not find the Mac download. Check https://github.com/$REPO/releases"
+  URL="https://github.com/$REPO/releases/download/$TAG/Special.Audio_${TAG#v}_universal.dmg"
+  curl -fL --progress-bar -o "$TMP/app.dmg" "$URL" || fail "Download failed: $URL"
+fi
 
 say "Installing to $DEST..."
 mkdir -p "$MOUNT"
