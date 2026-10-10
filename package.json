@@ -7,6 +7,11 @@
   "license": "MIT",
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
-    "start": "node tools/serve.js"
+    "start": "node tools/serve.js",
+    "tauri": "tauri",
+    "icons": "tauri icon src-tauri/app-icon.png"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1"
   }
 }
