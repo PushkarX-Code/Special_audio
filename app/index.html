@@ -31,23 +31,27 @@
     <nav class="tabs" aria-label="Sections" role="tablist">
       <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span></span>
       <button type="button" role="tab" class="tab" data-view="home" aria-selected="true">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1.5 2.6" stroke-linecap="round"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 11.2 12 4.5l8.2 6.7M6.3 9.4V19.5h4.2v-5.2h3v5.2h4.2V9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Home</span>
       </button>
       <button type="button" role="tab" class="tab" data-view="sound" aria-selected="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="14" r="1.6"/><circle cx="5" cy="18" r="1.6"/><circle cx="10" cy="6" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="14" r="1.6"/><circle cx="10" cy="18" r="1.6"/><circle cx="15" cy="10" r="1.6"/><circle cx="15" cy="14" r="1.6"/><circle cx="15" cy="18" r="1.6"/><circle cx="20" cy="18" r="1.6"/></g></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><g fill="currentColor"><rect x="3.8" y="12.5" width="4.4" height="3" rx="1.5"/><rect x="9.8" y="6.5" width="4.4" height="3" rx="1.5"/><rect x="15.8" y="14.5" width="4.4" height="3" rx="1.5"/></g></svg>
         <span>Sound</span>
       </button>
       <button type="button" role="tab" class="tab" data-view="audiophile" aria-selected="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="13" width="4" height="7" rx="2" fill="currentColor"/><rect x="17" y="13" width="4" height="7" rx="2" fill="currentColor"/></svg>
-        <span>Audiophile</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="3.4" y="13.6" width="4.4" height="6.6" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="16.2" y="13.6" width="4.4" height="6.6" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Hi-Fi</span>
       </button>
       <button type="button" role="tab" class="tab" data-view="look" aria-selected="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 3.6a8.4 8.4 0 0 0 0 16.8z" fill="currentColor"/></svg>
         <span>Look</span>
       </button>
+      <button type="button" role="tab" class="tab" data-view="update" aria-selected="false" data-desktop-tab>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 7.6v8.2M8.6 12.6 12 16l3.4-3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Update</span><i class="tab-badge" id="update-badge" hidden></i>
+      </button>
       <button type="button" role="tab" class="tab" data-view="settings" aria-selected="false">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="7" r="1.8"/><circle cx="12" cy="7" r="1.8"/><circle cx="18" cy="7" r="1.8"/><circle cx="6" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/><circle cx="6" cy="17" r="1.8"/><circle cx="12" cy="17" r="1.8"/><circle cx="18" cy="17" r="1.8"/></g></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.05 10.12 L21.10 10.63 L21.10 13.37 L19.05 13.88 L18.32 15.66 L19.40 17.46 L17.46 19.40 L15.66 18.32 L13.88 19.05 L13.37 21.10 L10.63 21.10 L10.12 19.05 L8.34 18.32 L6.54 19.40 L4.60 17.46 L5.68 15.66 L4.95 13.88 L2.90 13.37 L2.90 10.63 L4.95 10.12 L5.68 8.34 L4.60 6.54 L6.54 4.60 L8.34 5.68 L10.12 4.95 L10.63 2.90 L13.37 2.90 L13.88 4.95 L15.66 5.68 L17.46 4.60 L19.40 6.54 L18.32 8.34Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Settings</span>
       </button>
     </nav>
@@ -115,7 +119,7 @@
               <h2 class="label" id="quick-eq-title">Sound</h2>
               <button type="button" class="link label" data-goto="sound">Equaliser</button>
             </div>
-            <div class="chips scroll" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-eq"></div>
+            <div class="chips wrap" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-eq"></div>
           </section>
         </div>
       </section>
@@ -166,8 +170,8 @@
       </section>
 
       <!-- AUDIOPHILE -->
-      <section class="view" id="view-audiophile" role="tabpanel" aria-label="Audiophile" hidden>
-        <h1 class="view-title dot">Audiophile</h1>
+      <section class="view" id="view-audiophile" role="tabpanel" aria-label="Hi-Fi" hidden>
+        <h1 class="view-title dot">Hi-Fi</h1>
         <p class="notice card" data-notice hidden></p>
         <div class="grid">
           <section class="card row" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
@@ -247,6 +251,35 @@
         </div>
       </section>
 
+      <!-- UPDATE -->
+      <section class="view" id="view-update" role="tabpanel" aria-label="Update" hidden>
+        <h1 class="view-title dot">Update</h1>
+        <div class="grid">
+          <section class="card span-2 upd" aria-live="polite">
+            <div class="upd-head">
+              <img class="upd-icon" src="app-icon.png" alt="" width="64" height="64">
+              <div class="upd-text">
+                <h2 class="upd-title" data-upd-title>Special Audio</h2>
+                <p class="desc" data-upd-desc>Version <span data-upd-current>-</span></p>
+              </div>
+              <button type="button" class="pill" data-upd-action>Check now</button>
+            </div>
+            <div class="upd-progress" data-upd-progress hidden><span></span></div>
+            <details class="upd-notes" data-upd-notes hidden>
+              <summary><span data-upd-notes-title>What's new</span></summary>
+              <div class="upd-notes-body" data-upd-notes-body></div>
+            </details>
+          </section>
+          <section class="card row span-2" aria-labelledby="autoupd-title">
+            <div><div class="card-head"><h2 class="label" id="autoupd-title">Check automatically</h2></div><p class="desc">Looks for updates when the app opens and every few hours. Nothing installs until you click Update.</p></div>
+            <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="autoupd-title" id="autoupd-switch"><span class="knob"></span></button>
+          </section>
+          <section class="card span-2">
+            <p class="desc">Every version and its changes: <a class="link" href="https://github.com/PushkarX-Code/Special_audio/releases" target="_blank" rel="noopener" data-external>Releases page</a></p>
+          </section>
+        </div>
+      </section>
+
       <!-- SETTINGS -->
       <section class="view" id="view-settings" role="tabpanel" aria-label="Settings" hidden>
         <h1 class="view-title dot">Settings</h1>
@@ -262,10 +295,6 @@
           <section class="card row" data-desktop aria-labelledby="exp-title">
             <div><div class="card-head"><h2 class="label" id="exp-title">Experimental controls</h2></div><p class="desc">Unlock EQ presets, spatial audio and low lag on the CMF Headphone Pro. These commands come from community research and aren't confirmed yet. The app checks what the headphones report back after every change.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
-          </section>
-          <section class="card row" data-desktop aria-labelledby="update-title">
-            <div><div class="card-head"><h2 class="label" id="update-title">Updates</h2></div><p class="desc">Version <span id="app-version">-</span>. Updates install from inside the app.</p></div>
-            <button type="button" class="pill small" id="update-btn">Check now</button>
           </section>
           <section class="card" aria-labelledby="about-title">
             <div class="card-head"><h2 class="label" id="about-title">About</h2></div>
@@ -298,6 +327,24 @@
     </div>
     <ol class="log" id="log" aria-live="off"></ol>
   </section>
+
+  <!-- Update screen: shown when a new version is found -->
+  <div class="upd-screen" id="upd-screen" role="dialog" aria-modal="true" aria-labelledby="upd-screen-title" hidden>
+    <div class="upd-sheet upd">
+      <img class="upd-icon big" src="app-icon.png" alt="" width="88" height="88">
+      <h2 class="upd-title" id="upd-screen-title" data-upd-title>Update available</h2>
+      <p class="desc" data-upd-desc></p>
+      <details class="upd-notes" data-upd-notes open>
+        <summary><span data-upd-notes-title>What's new</span></summary>
+        <div class="upd-notes-body" data-upd-notes-body></div>
+      </details>
+      <div class="upd-progress" data-upd-progress hidden><span></span></div>
+      <div class="upd-buttons">
+        <button type="button" class="pill ghost" data-upd-later>Later</button>
+        <button type="button" class="pill solid" data-upd-action>Update now</button>
+      </div>
+    </div>
+  </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

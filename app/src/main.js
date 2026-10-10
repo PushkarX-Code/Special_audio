@@ -12,6 +12,7 @@ import { createBackground } from './ui/background.js';
 import { createEqVisual } from './ui/eq-visual.js';
 import { radioGroup, switchControl, dotRipple } from './ui/controls.js';
 import { createDevPanel } from './ui/devpanel.js';
+import { createUpdates } from './ui/updates.js';
 import { isDesktop, invoke, emit, listen, watchSystemHeadphones, prefs } from './platform.js';
 
 const $ = (id) => document.getElementById(id);
@@ -223,13 +224,16 @@ const login = switchControl($('login-switch'), async (on) => {
 });
 if (isDesktop) {
   invoke('autostart_get').then((on) => login.set(!!on));
-  invoke('app_version').then((v) => ($('app-version').textContent = v));
-  $('update-btn').addEventListener('click', () => invoke('check_for_update', { quiet: false }).catch((e) => toast(String(e))));
 } else {
   document.querySelectorAll('.card[data-desktop]').forEach((el) => (el.hidden = true));
 }
 
 createDevPanel({ controller, getMock: () => mock });
+
+// ---- updates ----
+createUpdates({ toast });
+const autoUpd = switchControl($('autoupd-switch'), (on) => { prefs.set('autoUpdate', on); autoUpd.set(on); });
+autoUpd.set(prefs.get('autoUpdate', true));
 
 // ---- menu bar / tray panel bridge ----
 // The panel is a separate window. It receives state from here and sends commands back.
@@ -284,7 +288,7 @@ controller.subscribe((s) => {
     ?? (s.status === 'idle' ? (isDesktop ? 'Turn your headphones on and connect them in Bluetooth settings.' : 'Download the desktop app to connect your headphones.') : systemHint);
   $('retry-btn').hidden = !(s.kind === 'system' && isCmf && controlError);
 
-  // Sound / Audiophile notice for headphones without a control channel
+  // Sound / Hi-Fi notice for headphones without a control channel
   const notice = !connected ? 'Connect your headphones to use these controls.'
     : s.kind !== 'system' ? ''
       : isCmf ? 'Connecting to the headphone controls. Check the Home tab if this stays.'

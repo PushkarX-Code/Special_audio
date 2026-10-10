@@ -72,13 +72,14 @@ There's no warning because the warning only appears for files downloaded through
 |---|---|
 | **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
 | **Sound** | EQ presets, custom EQ (bass, mid, treble) with presets you name and save, spatial audio |
-| **Audiophile** | Low lag mode, high quality audio, Dirac Opteo, device details |
+| **Hi-Fi** | Low lag mode, high quality audio, Dirac Opteo, device details |
+| **Update** | Your version, what's new, and one-click updates |
 | **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation, music visualizer |
-| **Settings** | Start at login, connection notifications, experimental controls, updates, contact us |
+| **Settings** | Start at login, connection notifications, experimental controls, contact us |
 
 It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.
 
-**Updates install from inside the app.** It checks on launch, or go to Settings → Updates → Check now.
+**Updates install from inside the app.** When a new version is out, an update screen shows what's new with an **Update now** button. You can also open the **Update** tab any time.
 
 ## What works today
 

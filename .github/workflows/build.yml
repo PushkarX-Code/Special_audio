@@ -61,6 +61,12 @@ jobs:
 
       - run: npm ci
 
+      # What's new in this version (RELEASE_NOTES.md). The app shows it on its update screen.
+      - id: notes
+        shell: bash
+        run: |
+          { echo 'body<<EOF_NOTES'; cat RELEASE_NOTES.md; echo 'EOF_NOTES'; } >> "$GITHUB_OUTPUT"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,10 +79,13 @@ jobs:
           tagName: ${{ github.event_name != 'pull_request' && 'v__VERSION__' || '' }}
           releaseName: 'Special Audio v__VERSION__'
           releaseBody: |
+            ${{ steps.notes.outputs.body }}
+
+            ---
             **How to install:** follow the [Download](https://github.com/PushkarX-Code/Special_audio#download) steps in the README.
             Windows → `Special-Audio-windows-setup.exe`. Mac → `Special-Audio-mac.dmg`.
             The first time, your computer warns that the app is from an unknown developer. The README shows what to click, or how to install with one command and skip the warning.
-            Already installed? The app updates itself: open Settings → Updates → Check now.
+            Already installed? The app updates itself: open the Update tab.
           releaseDraft: false
           prerelease: false
 

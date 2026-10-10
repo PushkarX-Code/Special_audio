@@ -7,10 +7,9 @@ mod rfcomm;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, WindowEvent,
+    AppHandle, Emitter, Manager, WindowEvent,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt as _};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_positioner::{Position, WindowExt};
 use tauri_plugin_updater::UpdaterExt;
@@ -96,28 +95,45 @@ fn app_version(app: AppHandle) -> String {
     app.package_info().version.to_string()
 }
 
-/// Checks GitHub for a newer release. Asks before installing; `quiet` skips the "up to date" message.
+#[derive(serde::Serialize)]
+struct UpdateInfo {
+    version: String,
+    current: String,
+    notes: Option<String>,
+    date: Option<String>,
+}
+
+/// Checks GitHub for a newer release. The page shows the update screen; nothing installs without a click.
 #[tauri::command]
-async fn check_for_update(app: AppHandle, quiet: bool) -> Result<Option<String>, String> {
+async fn update_check(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
     let update = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
-    let Some(update) = update else {
-        if !quiet {
-            app.dialog().message("You have the latest version.").title("Special Audio").show(|_| {});
-        }
-        return Ok(None);
-    };
-    let version = update.version.clone();
-    let install = app
-        .dialog()
-        .message(format!("Special Audio {version} is available. Install it now? The app restarts when it's done."))
-        .title("Update available")
-        .buttons(MessageDialogButtons::OkCancelCustom("Install".into(), "Later".into()))
-        .blocking_show();
-    if install {
-        update.download_and_install(|_, _| {}, || {}).await.map_err(|e| e.to_string())?;
-        app.restart();
-    }
-    Ok(Some(version))
+    Ok(update.map(|u| UpdateInfo {
+        version: u.version.clone(),
+        current: u.current_version.clone(),
+        notes: u.body.clone(),
+        date: u.date.map(|d| d.date().to_string()),
+    }))
+}
+
+/// Downloads and installs the newest release, reporting progress as "update-progress" {done, total},
+/// then restarts the app.
+#[tauri::command]
+async fn update_install(app: AppHandle) -> Result<(), String> {
+    let update = app.updater().map_err(|e| e.to_string())?.check().await.map_err(|e| e.to_string())?;
+    let Some(update) = update else { return Err("No update available".into()) };
+    let mut done: u64 = 0;
+    let progress = app.clone();
+    update
+        .download_and_install(
+            move |chunk, total| {
+                done += chunk as u64;
+                let _ = progress.emit("update-progress", serde_json::json!({ "done": done, "total": total }));
+            },
+            || {},
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+    app.restart();
 }
 
 fn show_main(app: &AppHandle) {
@@ -160,7 +176,8 @@ pub fn run() {
             autostart_set,
             app_version,
             open_main,
-            check_for_update,
+            update_check,
+            update_install,
             rfcomm_connect,
             rfcomm_send,
             rfcomm_disconnect,
@@ -205,10 +222,7 @@ pub fn run() {
                 }
             }
 
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                let _ = check_for_update(handle, true).await;
-            });
+            // Updates: the page checks on launch and every few hours, and shows the update screen.
             Ok(())
         })
         .on_window_event(|window, event| match event {
