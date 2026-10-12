@@ -3,8 +3,8 @@ import { Controller } from './device/controller.js';
 import { MockHeadphones } from './device/mock.js';
 import { NativeHeadphones } from './device/native.js';
 import { createMusicBar } from './ui/music.js';
-import { ACCENTS, readLook, applyLook, saveLook } from './ui/look.js';
-import { EQ_PRESETS, DOP, CUSTOM_EQ_RANGE } from './protocol/drafts.js';
+import { readLook, applyLook, saveLook } from './ui/look.js';
+import { EQ_PRESETS, DOP, CUSTOM_EQ_RANGE, CONTROL_SLOTS, CONTROL_ACTIONS, SLOT_ACTIONS } from './protocol/drafts.js';
 import { createHero } from './ui/hero.js';
 import { createLevels } from './ui/levels.js';
 import { createMusicViz } from './ui/music-viz.js';
@@ -32,9 +32,29 @@ const refreshColors = () => requestAnimationFrame(() => [hero, background, eqVis
 
 // ---- tabs ----
 const tabs = [...document.querySelectorAll('.tab')];
+// Tab switch: the highlight slides to the new tab, the view's cards rise in one after another.
+const tabPill = document.querySelector('.tab-pill');
+function moveTabPill() {
+  const t = tabs.find((x) => x.getAttribute('aria-selected') === 'true');
+  if (!t || !tabPill) return;
+  tabPill.style.width = `${t.offsetWidth}px`; tabPill.style.height = `${t.offsetHeight}px`;
+  tabPill.style.transform = `translate(${t.offsetLeft}px, ${t.offsetTop}px)`;
+}
+window.addEventListener('resize', moveTabPill);
+document.fonts?.ready.then(() => { moveTabPill(); requestAnimationFrame(() => tabPill?.classList.add('ready')); });
 function showView(name) {
   for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.view === name));
-  for (const v of document.querySelectorAll('.view')) v.hidden = v.id !== `view-${name}`;
+  moveTabPill();
+  for (const v of document.querySelectorAll('.view')) {
+    const show = v.id === `view-${name}`;
+    if (show && v.hidden) {
+      v.classList.remove('entering');
+      void v.offsetWidth; // restart the animation
+      v.querySelectorAll('.view-title, .card').forEach((c, i) => c.style.setProperty('--i', String(Math.min(i, 8))));
+      v.classList.add('entering');
+    }
+    v.hidden = !show;
+  }
   prefs.set('view', name);
   if (name === 'sound') requestAnimationFrame(() => eqVisual.set(lastEqKey, controller.state.status === 'connected'));
 }
@@ -86,13 +106,7 @@ motion.set(document.documentElement.dataset.motion === 'reduced' ? 'reduced' : '
 // Accent colour, dot shape and glass style. Shared with the menu bar panel.
 const look = readLook();
 applyLook(look);
-$('accent-chips').append(...Object.entries(ACCENTS).map(([name, rgb]) => {
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'swatch'; b.setAttribute('role', 'radio'); b.dataset.value = name;
-  b.setAttribute('aria-label', name); b.style.setProperty('--swatch', `rgb(${rgb})`);
-  return b;
-}));
-for (const [key, id] of [['accent', 'accent-chips'], ['dots', 'dots-chips'], ['glass', 'glass-chips']]) {
+for (const [key, id] of [['dots', 'dots-chips'], ['glass', 'glass-chips']]) {
   const group = radioGroup($(id), (v) => {
     look[key] = v; saveLook(key, v); applyLook(look); group.set(v); refreshColors();
     emit('sa-look', { theme: document.documentElement.dataset.theme ?? 'system', ...look });
@@ -189,6 +203,27 @@ const pickEq = (v) => (v === 'custom' ? controller.setCustomEq(hpEq.get()) : con
 const eq = radioGroup($('eq-chips'), pickEq);
 const quickEq = radioGroup($('quick-eq'), pickEq);
 const lowLag = switchControl($('lowlag-switch'), (on) => controller.setLowLag(on));
+const codec = radioGroup($('codec-chips'), (v) => {
+  if (v === controller.state.codec) return;
+  controller.setCodec(v);
+  toast(`Switching to ${v.toUpperCase()}. Your headphones restart and reconnect.`);
+});
+const controlGroups = {};
+$('control-rows').append(...CONTROL_SLOTS.map((slot) => {
+  const row = document.createElement('div');
+  row.className = 'control-row';
+  const label = document.createElement('span'); label.className = 'label'; label.textContent = slot.label;
+  const chips = document.createElement('div');
+  chips.className = 'chips grid-chips'; chips.setAttribute('role', 'radiogroup'); chips.setAttribute('aria-label', slot.label);
+  chips.append(...SLOT_ACTIONS[slot.id].map((a) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip small'; b.setAttribute('role', 'radio'); b.dataset.value = a; b.textContent = CONTROL_ACTIONS[a].label;
+    return b;
+  }));
+  controlGroups[slot.id] = radioGroup(chips, (a) => controller.setControl(slot.id, a));
+  row.append(label, chips);
+  return row;
+}));
 
 // Custom EQ on the headphones: graph editor + precise cells, Compare (hear it flat), Flat, saved presets.
 const fmt = (v) => (v > 0 ? `+${v}` : String(v));
@@ -361,6 +396,12 @@ controller.subscribe((s) => {
   $('hp-reset').disabled = !customOn; $('hp-compare').disabled = !customOn;
   $('preset-save').disabled = !(controllable && s.features.customEq);
 
+  codec.set(controllable ? s.codec : null);
+  codec.setEnabled(controllable && s.features.codec);
+  for (const [slot, g] of Object.entries(controlGroups)) {
+    g.set(controllable ? s.controls?.[slot] ?? null : null);
+    g.setEnabled(controllable && s.features.controls);
+  }
   lowLag.set(controllable && s.lowLag);
   lowLag.setEnabled(controllable && s.features.lowLag);
 
@@ -373,6 +414,7 @@ controller.subscribe((s) => {
     ['Name', s.deviceName ?? '-'],
     ['Model', s.model ?? (CMF.test(s.deviceName ?? '') ? 'B175' : '-')],
     ['Firmware', s.firmware ?? '-'],
+    ['Codec', s.codec ? s.codec.toUpperCase() : '-'],
     ['Battery', hasBattery ? `${s.battery.level}%` : '-'],
     ['Connection', s.kind === 'system' ? 'Bluetooth (audio only)' : connected ? 'Bluetooth (full control)' : '-'],
   ];

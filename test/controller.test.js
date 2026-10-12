@@ -79,3 +79,20 @@ test('custom EQ reaches the headphones and is read back', async () => {
   assert.deepEqual(dev.state.customEq, [3, 0, -1.5]);
   await c.disconnect();
 });
+
+test('button controls and codec: read, change, read back', async () => {
+  const { draftCmd } = await import('../app/src/protocol/drafts.js');
+  assert.deepEqual(draftCmd.setControl('press', 'spatial').payload, [0x01, 0x06, 0x0a, 0x01, 0x1b]);
+  assert.throws(() => draftCmd.setControl('slider', 'assistant'), /not allowed/);
+  const c = new Controller();
+  c.setExperimental(true);
+  const dev = realHeadphones();
+  await c.connect(dev);
+  assert.deepEqual(c.state.controls, { press: 'assistant', hold: 'noise', roller: 'noise', slider: 'bass' });
+  assert.equal(c.state.codec, 'aac');
+  await c.setControl('press', 'spatial');
+  assert.equal(c.state.controls.press, 'spatial');
+  await c.setCodec('ldac');
+  assert.equal(dev.state.codec, 2);
+  await c.disconnect();
+});

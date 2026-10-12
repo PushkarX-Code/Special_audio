@@ -74,9 +74,9 @@ There's no warning because the warning only appears for files downloaded through
 |---|---|
 | **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
 | **Sound** | EQ presets; custom EQ on the headphones (drag the curve or set each band in 0.5 dB steps, compare, save presets); 10-band PC equaliser with presets and automatic headroom; spatial audio |
-| **Hi-Fi** | Low lag mode, device details |
+| **Hi-Fi** | Audio quality (AAC or LDAC), button controls (action button, roller, energy slider), low lag mode, device details |
 | **Update** | Your version, what's new, and one-click updates |
-| **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation, music visualizer |
+| **Look** | Theme, round or square dots, glass style, full or calm animation, music visualizer |
 | **Settings** | Start at login, notifications, full headphone control, developer and contact |
 
 It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.

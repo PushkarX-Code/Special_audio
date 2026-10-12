@@ -15,6 +15,10 @@ export const DOP = {
   SET_LOW_LAG: 0xf040, // S1 setLatency(), S2 setLatency(). B175 support: S2 only
   GET_CUSTOM_EQ: 0xc044, // S1 getCustomEQ(), S2 CUSTOM_EQ_GET. Reply 0x4044
   SET_CUSTOM_EQ: 0xf041, // S1 setCustomEQ_BT(), S2 CUSTOM_EQ_SET
+  GET_CODEC: 0xc029,     // S1 getHighQualityAudio(). Reply 0x4029, payload[0] = 0 AAC, 1 LHDC, 2 LDAC
+  SET_CODEC: 0xf01c,     // S1 setHighQualityAudio_BT(). The headphones restart to switch
+  GET_CONTROLS: 0xc018,  // S1, S2 GESTURES_GET. Reply 0x4018: [count, (device, button, type, action)...]
+  SET_CONTROL: 0xf003,   // S1 sendGestures(), S2 GESTURES_SET: [1, device, button, type, action]
 };
 
 export const DRAFT_OUTGOING = {
@@ -28,6 +32,10 @@ export const DRAFT_OUTGOING = {
   [DOP.SET_LOW_LAG]: 'SET low lag',
   [DOP.GET_CUSTOM_EQ]: 'GET custom eq',
   [DOP.SET_CUSTOM_EQ]: 'SET custom eq',
+  [DOP.GET_CODEC]: 'GET audio codec',
+  [DOP.SET_CODEC]: 'SET audio codec',
+  [DOP.GET_CONTROLS]: 'GET button controls',
+  [DOP.SET_CONTROL]: 'SET button control',
 };
 
 // Index order from S1 MainControl_forretress.html. S2 disagrees (see research doc).
@@ -81,6 +89,35 @@ export const SPATIAL_BYTES = { off: [0, 0], concert: [2, 0], cinema: [3, 0] };
 // 01 = on, 02 = off. S1 and S2 setLatency().
 export const LOW_LAG_BYTES = { on: 0x01, off: 0x02 };
 
+// Audio codec. B175 supports AAC and LDAC (official table: highQualityAudio 4 = LDAC bit).
+export const CODECS = { aac: 0, ldac: 2 };
+
+// Physical controls on the B175 (official defaultControl 060A0701 060A010B 06050123 06010716, S2 slots).
+// device 0x06 = headphones; button 0x0A action button, 0x01 roller, 0x05 energy slider; type 0x01 press/slide, 0x07 hold.
+export const CONTROL_SLOTS = [
+  { id: 'press', label: 'Action button · press', button: 0x0a, type: 0x01 },
+  { id: 'hold', label: 'Action button · hold', button: 0x0a, type: 0x07 },
+  { id: 'roller', label: 'Roller · hold', button: 0x01, type: 0x07 },
+  { id: 'slider', label: 'Energy slider', button: 0x05, type: 0x01 },
+];
+// Action codes (S2 B175 mapping; noise control uses the official default code 0x16).
+export const CONTROL_ACTIONS = {
+  assistant: { label: 'Voice assistant', code: 0x0b },
+  noise: { label: 'Noise control', code: 0x16 },
+  spatial: { label: 'Spatial audio', code: 0x1b },
+  eq: { label: 'Next EQ preset', code: 0x22 },
+  mic: { label: 'Mic on / off', code: 0x1d },
+  none: { label: 'Nothing', code: 0x01 },
+  bass: { label: 'Bass', code: 0x23 },
+  treble: { label: 'Treble', code: 0x24 },
+};
+export const SLOT_ACTIONS = {
+  press: ['assistant', 'noise', 'spatial', 'eq', 'mic', 'none'],
+  hold: ['assistant', 'noise', 'spatial', 'eq', 'mic', 'none'],
+  roller: ['noise', 'none'],
+  slider: ['bass', 'treble'],
+};
+
 export const draftCmd = {
   getModel: () => ({ command: DOP.GET_MODEL, payload: [] }),
   getEq: () => ({ command: DOP.GET_EQ, payload: [] }),
@@ -101,4 +138,15 @@ export const draftCmd = {
   getCustomEq: () => ({ command: DOP.GET_CUSTOM_EQ, payload: [] }),
   setCustomEq: (bands) => ({ command: DOP.SET_CUSTOM_EQ, payload: encodeCustomEq(bands) }),
   selectCustom: (command = DOP.SET_EQ) => ({ command, payload: [CUSTOM_PRESET_INDEX, 0x00] }),
+  getCodec: () => ({ command: DOP.GET_CODEC, payload: [] }),
+  setCodec: (name) => {
+    if (!(name in CODECS)) throw new Error(`unknown codec: ${name}`);
+    return { command: DOP.SET_CODEC, payload: [CODECS[name]] };
+  },
+  getControls: () => ({ command: DOP.GET_CONTROLS, payload: [] }),
+  setControl: (slotId, actionId) => {
+    const slot = CONTROL_SLOTS.find((x) => x.id === slotId);
+    if (!slot || !SLOT_ACTIONS[slotId].includes(actionId)) throw new Error(`not allowed: ${slotId} -> ${actionId}`);
+    return { command: DOP.SET_CONTROL, payload: [0x01, 0x06, slot.button, slot.type, CONTROL_ACTIONS[actionId].code] };
+  },
 };

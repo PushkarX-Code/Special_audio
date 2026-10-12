@@ -1,7 +1,7 @@
 ### New
-- Mac: full headphone control. Battery, noise control, EQ, custom EQ, spatial audio and low lag now work on Mac too
-- The first time, your Mac asks to allow Bluetooth for Special Audio. Click Allow
+- Hi-Fi tab: choose the audio codec (AAC or LDAC) and what the action button, roller and energy slider do
+- Smooth tab switching: the highlight slides to the tab you pick and the cards rise in
 
-### Fixed
-- "Connected" no longer shows twice on the Home screen
-- Connection problems show once, under the ring, instead of twice
+### Changed
+- Buttons and cards are now the same size across the app
+- One colour: Nothing red. The accent colour option is gone and the connected dot is white
