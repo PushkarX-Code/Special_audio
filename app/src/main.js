@@ -297,6 +297,31 @@ for (const card of document.querySelectorAll('.card[data-feature]')) {
   b.addEventListener('click', () => setExperimental(true));
   card.append(b);
 }
+// Reset all: app settings back to defaults, and the headphones' sound (EQ, custom EQ, spatial audio, low lag).
+// Saved presets stay. Button actions and noise control are left as they are; nothing is factory reset.
+const resetBtn = $('reset-btn');
+let resetArmed = 0;
+resetBtn.addEventListener('click', async () => {
+  if (Date.now() - resetArmed > 4000) {
+    resetArmed = Date.now(); resetBtn.textContent = 'Click again';
+    setTimeout(() => { if (Date.now() - resetArmed >= 4000) resetBtn.textContent = 'Reset all'; }, 4000);
+    return;
+  }
+  resetBtn.disabled = true; resetBtn.textContent = 'Resetting';
+  const s = controller.state;
+  if (s.status === 'connected') {
+    if (s.features.customEq) await controller.setCustomEq([0, 0, 0]);
+    if (s.features.eq) await controller.setEq(EQ_PRESETS[0].id);
+    if (s.features.spatial) await controller.setSpatial('off');
+    if (s.features.lowLag) await controller.setLowLag(false);
+  }
+  if (prefs.get('pcEq', null)?.enabled) await invoke('pc_eq_apply', { enabled: false, preamp: 0, bands: Array(10).fill(0) }).catch(() => {});
+  if (isDesktop) await invoke('autostart_set', { on: false }).catch(() => {});
+  try {
+    for (const k of Object.keys(localStorage)) if (k !== 'eqSetOp' && !/presets/i.test(k)) localStorage.removeItem(k);
+  } catch {}
+  location.reload();
+});
 const notif = switchControl($('notif-switch'), (on) => { prefs.set('notify', on); notif.set(on); });
 notif.set(prefs.get('notify', true));
 const login = switchControl($('login-switch'), async (on) => {

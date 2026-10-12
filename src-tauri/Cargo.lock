@@ -3673,7 +3673,7 @@ dependencies = [
 
 [[package]]
 name = "special-audio"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "objc2",
  "objc2-foundation",
