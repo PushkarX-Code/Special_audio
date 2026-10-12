@@ -1,6 +1,8 @@
 // Desktop shell: main window, menu bar / tray mini panel, notifications, start at login and updates.
 mod audio;
 mod pc_eq;
+#[cfg(target_os = "macos")]
+mod mac_link;
 mod bluetooth;
 mod media;
 mod rfcomm;

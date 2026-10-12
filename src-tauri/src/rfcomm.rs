@@ -84,11 +84,34 @@ mod imp {
     }
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+mod imp {
+    use crate::mac_link::{self, Event};
+    use std::sync::Arc;
+    use tauri::{AppHandle, Emitter};
+
+    const SERVICE: u128 = 0xaeac4a03_dff5_498f_843a_34487cf133eb;
+
+    pub fn connect(app: AppHandle, address: &str) -> Result<(), String> {
+        let on_event = Arc::new(move |e: Event| match e {
+            Event::Data(bytes) => { let _ = app.emit("rfcomm-data", bytes); }
+            Event::Closed => { let _ = app.emit("rfcomm-closed", "lost"); }
+        });
+        mac_link::connect(address, SERVICE, on_event)
+    }
+    pub fn send(bytes: &[u8]) -> Result<(), String> {
+        mac_link::send(bytes)
+    }
+    pub fn disconnect() {
+        mac_link::disconnect()
+    }
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 mod imp {
     use tauri::AppHandle;
     pub fn connect(_: AppHandle, _: &str) -> Result<(), String> {
-        Err("Headphone controls on this computer arrive in a later update.".into())
+        Err("Headphone controls aren't available on this system.".into())
     }
     pub fn send(_: &[u8]) -> Result<(), String> {
         Err("not connected".into())

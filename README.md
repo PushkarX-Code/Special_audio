@@ -87,12 +87,12 @@ It also lives in your **menu bar (Mac) or system tray (Windows)**: click the ico
 
 | | Windows | Mac |
 |---|---|---|
-| CMF Headphone Pro: real battery, firmware, noise control (ANC, Transparency, Off, strength) | Yes | Next update |
+| CMF Headphone Pro: real battery, firmware, noise control (ANC, Transparency, Off, strength) | Yes | Yes |
 | Any Bluetooth headphones: name and connected notification | Yes | Yes (plus battery when reported) |
 | Music controls: song, play/pause, next, previous | Any music app | Spotify and Apple Music |
 | Visualizer: the ring and music card move with your music | Yes, from the real sound | A gentle pulse while music plays |
 | Menu bar / tray panel, start at login, in-app updates, custom looks | Yes | Yes |
-| CMF Headphone Pro: EQ presets, custom EQ, spatial audio, low lag | Yes | Next update |
+| CMF Headphone Pro: EQ presets, custom EQ, spatial audio, low lag | Yes | Yes |
 | PC equaliser, 10 bands, for everything the computer plays | Yes, with the free [Equalizer APO](https://sourceforge.net/projects/equalizerapo/) | |
 
 Close the Nothing X app on your phone before connecting: the headphones accept one controller at a time.

@@ -2458,6 +2458,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "objc2-io-bluetooth"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "558b52e7b77f6a68e1e2cc700ff2266779ede47bacb260a33d363b9a623cc761"
+dependencies = [
+ "objc2",
+ "objc2-core-foundation",
+ "objc2-foundation",
+]
+
+[[package]]
 name = "objc2-io-surface"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3662,8 +3673,11 @@ dependencies = [
 
 [[package]]
 name = "special-audio"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
+ "objc2",
+ "objc2-foundation",
+ "objc2-io-bluetooth",
  "serde",
  "serde_json",
  "tauri",
