@@ -4,22 +4,22 @@ import { MockHeadphones } from './device/mock.js';
 import { NativeHeadphones } from './device/native.js';
 import { createMusicBar } from './ui/music.js';
 import { ACCENTS, readLook, applyLook, saveLook } from './ui/look.js';
-import { EQ_PRESETS, DOP } from './protocol/drafts.js';
+import { EQ_PRESETS, DOP, CUSTOM_EQ_RANGE } from './protocol/drafts.js';
 import { createHero } from './ui/hero.js';
 import { createLevels } from './ui/levels.js';
 import { createMusicViz } from './ui/music-viz.js';
 import { createBackground } from './ui/background.js';
 import { createEqVisual } from './ui/eq-visual.js';
 import { radioGroup, switchControl, dotRipple } from './ui/controls.js';
-import { createDevPanel } from './ui/devpanel.js';
 import { createUpdates } from './ui/updates.js';
 import { addIcons } from './ui/icons.js';
+import { createEqEditor } from './ui/eq-pro.js';
+import { createPcEq } from './ui/pc-eq.js';
 import { isDesktop, invoke, emit, listen, watchSystemHeadphones, prefs } from './platform.js';
 
 const $ = (id) => document.getElementById(id);
 const app = document.querySelector('.app');
 const controller = new Controller();
-let mock = null;
 document.documentElement.dataset.platform = isDesktop ? 'desktop' : 'web';
 
 // ---- visuals ----
@@ -28,7 +28,7 @@ const hero = createHero($('hero-canvas'), sound);
 const musicViz = createMusicViz($('music-viz'), sound);
 const background = createBackground($('grid'));
 const eqVisual = createEqVisual($('eq-canvas'));
-const refreshColors = () => requestAnimationFrame(() => [hero, background, eqVisual, musicViz].forEach((v) => v.refreshColors()));
+const refreshColors = () => requestAnimationFrame(() => [hero, background, eqVisual, musicViz, hpEq, pcEq].forEach((v) => v.refreshColors()));
 
 // ---- tabs ----
 const tabs = [...document.querySelectorAll('.tab')];
@@ -111,15 +111,12 @@ function setViz(v) {
 setViz(prefs.get('viz', 'on'));
 
 // ---- connection ----
-$('demo-btn').addEventListener('click', async () => {
-  mock = new MockHeadphones();
-  try { await controller.connect(mock); } catch (e) { toast(e.message); }
-});
-$('disconnect-btn').addEventListener('click', async () => { await controller.disconnect(); mock = null; resync(); });
+// ?preview: a simulated headphone, used to make the README screenshots. Not reachable from the app.
+if (new URLSearchParams(location.search).has('preview')) setTimeout(() => controller.connect(new MockHeadphones()).catch(() => {}), 300);
 $('bt-btn').addEventListener('click', () => invoke('open_bluetooth_settings'));
 if (!isDesktop) $('bt-btn').hidden = true;
 
-// Headphones connected in the OS (any brand). A demo session takes priority.
+// Headphones connected in the OS (any brand).
 // CMF Headphone Pro: open the private control channel automatically (desktop app).
 const CMF = /CMF Headphone Pro/i;
 let systemDevice = null;
@@ -149,7 +146,7 @@ $('contact-btn').addEventListener('click', () => {
   else location.href = `mailto:${['email.puskar', 'gmail.com'].join('@')}?subject=Special%20Audio`;
 });
 
-// Notification when headphones connect (real devices only, not the demo).
+// Notification when headphones connect (real devices only, not the simulated one).
 let notifiedFor = null;
 controller.subscribe((s) => {
   const name = s.status === 'connected' && s.kind !== 'demo' ? s.deviceName : null;
@@ -166,11 +163,12 @@ const spatial = radioGroup($('spatial-chips'), (v, btn) => { dotRipple(btn); con
 
 const presetChip = (p) => {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.value = p.id; b.dataset.icon = p.id; b.textContent = p.label;
+  b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.value = p.id; b.dataset.icon = p.id === 'custom' ? 'sliders' : p.id; b.textContent = p.label;
   return b;
 };
-$('eq-chips').append(...EQ_PRESETS.map(presetChip));
-$('quick-eq').append(...EQ_PRESETS.map(presetChip));
+const CUSTOM_CHIP = { id: 'custom', label: 'Custom' };
+$('eq-chips').append(...[...EQ_PRESETS, CUSTOM_CHIP].map(presetChip));
+$('quick-eq').append(...[...EQ_PRESETS, CUSTOM_CHIP].map(presetChip));
 addIcons();
 
 // Noise control (i): what each mode does
@@ -183,27 +181,44 @@ $('noise-info-btn').addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   if (!$('noise-info').hidden && !e.target.closest('#noise-info')) { $('noise-info').hidden = true; $('noise-info-btn').setAttribute('aria-expanded', 'false'); }
 });
-const eq = radioGroup($('eq-chips'), (v) => controller.setEq(v));
-const quickEq = radioGroup($('quick-eq'), (v) => controller.setEq(v));
+const pickEq = (v) => (v === 'custom' ? controller.setCustomEq(hpEq.get()) : controller.setEq(v));
+const eq = radioGroup($('eq-chips'), pickEq);
+const quickEq = radioGroup($('quick-eq'), pickEq);
 const lowLag = switchControl($('lowlag-switch'), (on) => controller.setLowLag(on));
 
-// Custom EQ: three sliders, plus presets the user names and saves on this computer.
-const sliders = [...document.querySelectorAll('#custom-sliders input')];
+// Custom EQ on the headphones: graph editor + precise cells, Compare (hear it flat), Flat, saved presets.
 const fmt = (v) => (v > 0 ? `+${v}` : String(v));
-let sliderTimer = 0;
-sliders.forEach((input) => input.addEventListener('input', () => {
-  input.nextElementSibling.textContent = fmt(Number(input.value));
-  const bands = sliders.map((i) => Number(i.value));
-  eqVisual.set(bands, true);
-  clearTimeout(sliderTimer);
-  sliderTimer = setTimeout(() => controller.setCustomEq(bands), 120);
-}));
+const hpEq = createEqEditor($('hp-eq'), {
+  bands: [
+    { label: 'Bass', freq: 140, type: 'low', q: 0.8 },
+    { label: 'Mid', freq: 980, type: 'peak', q: 0.7 },
+    { label: 'Treble', freq: 3500, type: 'high', q: 1.0 },
+  ],
+  range: CUSTOM_EQ_RANGE, step: 0.5,
+  onChange: (g, final) => {
+    eqVisual.set(g, true);
+    clearTimeout(hpTimer);
+    hpDirty = true;
+    hpTimer = setTimeout(() => { hpDirty = false; controller.setCustomEq(g); }, final ? 0 : 140);
+  },
+});
+let hpTimer = 0, hpDirty = false;
+let comparing = false;
+$('hp-reset').addEventListener('click', () => { hpEq.set([0, 0, 0]); controller.setCustomEq([0, 0, 0]); });
+$('hp-compare').addEventListener('click', () => {
+  comparing = !comparing;
+  $('hp-compare').setAttribute('aria-pressed', String(comparing));
+  $('hp-compare').textContent = comparing ? 'Back to yours' : 'Compare';
+  controller.setCustomEq(comparing ? [0, 0, 0] : savedForCompare);
+  hpEq.setEnabled(!comparing);
+});
+let savedForCompare = [0, 0, 0];
 function renderMyPresets() {
   const list = prefs.get('myPresets', []);
   $('my-presets').replaceChildren(...list.map((p, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'chip small'; b.textContent = p.name; b.title = `Bass ${fmt(p.bands[0])}, Mid ${fmt(p.bands[1])}, Treble ${fmt(p.bands[2])}. Right-click to delete.`;
-    b.addEventListener('click', () => controller.setCustomEq(p.bands));
+    b.addEventListener('click', () => { hpEq.set(p.bands); controller.setCustomEq(p.bands); });
     b.addEventListener('contextmenu', (e) => { e.preventDefault(); list.splice(i, 1); prefs.set('myPresets', list); renderMyPresets(); toast(`Deleted "${p.name}"`); });
     return b;
   }));
@@ -212,7 +227,7 @@ $('preset-save').addEventListener('click', () => {
   const name = $('preset-name').value.trim();
   if (!name) { $('preset-name').focus(); return; }
   const list = prefs.get('myPresets', []).filter((p) => p.name !== name);
-  list.push({ name, bands: sliders.map((i) => Number(i.value)) });
+  list.push({ name, bands: hpEq.get() });
   prefs.set('myPresets', list.slice(-12));
   $('preset-name').value = '';
   renderMyPresets();
@@ -220,26 +235,27 @@ $('preset-save').addEventListener('click', () => {
 });
 renderMyPresets();
 
+// PC equaliser (Windows, Equalizer APO)
+const pcEq = createPcEq({ toast });
+document.addEventListener('click', (e) => { const url = e.target.closest('[data-open]')?.dataset.open; if (url) invoke('open_url', { url }); });
+
 // ---- settings ----
-// Experimental controls: draft commands (EQ, spatial, low lag) on the real headphones. Off by default.
+// Full headphone control: EQ, custom EQ, spatial audio and low lag (draft commands). On by default.
 controller.eqSetOp = prefs.get('eqSetOp', DOP.SET_EQ);
 controller.onEqOpLearned = (op) => prefs.set('eqSetOp', op);
-const exp = switchControl($('exp-switch'), (on) => {
-  setExperimental(on);
-  if (on) toast('Experimental controls on. If something looks wrong, turn this off.');
-});
+const exp = switchControl($('exp-switch'), (on) => setExperimental(on));
 function setExperimental(on) {
-  prefs.set('experimental', on); exp.set(on); controller.setExperimental(on);
+  prefs.set('fullControl', on); exp.set(on); controller.setExperimental(on);
 }
-exp.set(prefs.get('experimental', false));
-controller.setExperimental(prefs.get('experimental', false));
+exp.set(prefs.get('fullControl', true));
+controller.setExperimental(prefs.get('fullControl', true));
 // Locked cards get a one-click unlock instead of sending people to Settings.
 for (const card of document.querySelectorAll('.card[data-feature]')) {
-  if (card.dataset.feature === 'anc' || card.dataset.feature === 'customEq') continue; // custom EQ: demo only
+  if (card.dataset.feature === 'anc') continue;
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'pill small unlock-btn';
-  b.textContent = 'Unlock (experimental)';
-  b.addEventListener('click', () => { setExperimental(true); toast('Experimental controls on. Turn off any time in Settings.'); });
+  b.textContent = 'Turn on';
+  b.addEventListener('click', () => setExperimental(true));
   card.append(b);
 }
 const notif = switchControl($('notif-switch'), (on) => { prefs.set('notify', on); notif.set(on); });
@@ -253,7 +269,6 @@ if (isDesktop) {
   document.querySelectorAll('.card[data-desktop]').forEach((el) => (el.hidden = true));
 }
 
-createDevPanel({ controller, getMock: () => mock });
 
 // ---- updates ----
 createUpdates({ toast });
@@ -289,7 +304,7 @@ controller.subscribe((s) => {
   app.dataset.status = s.status;
   app.dataset.controllable = String(controllable);
 
-  $('status-text').textContent = connected && s.kind === 'demo' ? 'Demo' : STATUS_TEXT[s.status];
+  $('status-text').textContent = STATUS_TEXT[s.status];
   $('device-name').textContent = s.status === 'idle' ? 'No headphones' : s.deviceName ?? 'Headphones';
 
   // hero: real battery when the headphones report it, otherwise "Connected"
@@ -299,15 +314,12 @@ controller.subscribe((s) => {
   const hasBattery = connected && !!s.battery;
   $('pct').textContent = hasBattery ? String(s.battery.level) : '';
   $('pct-unit').hidden = !hasBattery;
-  $('side-status').textContent = connected ? (s.kind === 'demo' ? 'Demo' : 'Connected') : busy ? 'Connecting' : 'Offline';
-  $('batt').hidden = !hasBattery;
-  if (hasBattery) { $('batt-fill').style.width = `${s.battery.level}%`; $('batt').dataset.charging = String(!!s.battery.charging); }
-  $('pct-label').textContent = busy ? STATUS_TEXT[s.status] : !connected ? 'Offline' : !hasBattery ? 'Connected' : s.battery.charging ? 'Charging' : 'Battery';
+  $('side-status').textContent = connected ? 'Connected' : busy ? 'Connecting' : 'Offline';
+  $('pct-label').textContent = busy ? STATUS_TEXT[s.status] : !connected ? 'Offline' : !hasBattery ? 'Connected' : s.battery.charging ? 'Charging' : '';
   app.dataset.low = String(hasBattery && s.battery.level <= 20);
   app.dataset.nobattery = String(connected && !hasBattery);
 
   $('idle-row').hidden = s.status !== 'idle';
-  $('session-row').hidden = s.kind !== 'demo' || s.status === 'idle';
   const isCmf = CMF.test(s.deviceName ?? '');
   const systemHint = s.kind !== 'system' ? ''
     : !isCmf ? 'Full controls are available for the CMF Headphone Pro.'
@@ -339,10 +351,10 @@ controller.subscribe((s) => {
   quickEq.setEnabled(controllable && s.features.eq);
   const eqKey = !controllable ? null : s.eq === 'custom' ? s.customEq : s.eq;
   if (JSON.stringify(eqKey) !== JSON.stringify(lastEqKey)) { eqVisual.set(eqKey, controllable); lastEqKey = eqKey; }
-  sliders.forEach((input, i) => {
-    input.disabled = !(controllable && s.features.customEq);
-    if (s.eq === 'custom' && document.activeElement !== input) { input.value = s.customEq[i]; input.nextElementSibling.textContent = fmt(s.customEq[i]); }
-  });
+  const customOn = controllable && s.features.customEq;
+  hpEq.setEnabled(customOn && !comparing);
+  if (!comparing && !hpDirty && !s.pending.customEq) { hpEq.set(s.customEq); savedForCompare = s.customEq.slice(); }
+  $('hp-reset').disabled = !customOn; $('hp-compare').disabled = !customOn;
   $('preset-save').disabled = !(controllable && s.features.customEq);
 
   lowLag.set(controllable && s.lowLag);
@@ -355,10 +367,10 @@ controller.subscribe((s) => {
 
   const details = [
     ['Name', s.deviceName ?? '-'],
-    ['Model', s.model ?? (s.kind === 'demo' ? 'B175 (demo)' : '-')],
+    ['Model', s.model ?? (CMF.test(s.deviceName ?? '') ? 'B175' : '-')],
     ['Firmware', s.firmware ?? '-'],
     ['Battery', hasBattery ? `${s.battery.level}%` : '-'],
-    ['Connection', s.kind === 'demo' ? 'Demo' : s.kind === 'system' ? 'Bluetooth (audio only)' : connected ? 'Bluetooth (full control)' : '-'],
+    ['Connection', s.kind === 'system' ? 'Bluetooth (audio only)' : connected ? 'Bluetooth (full control)' : '-'],
   ];
   $('device-details').replaceChildren(...details.flatMap(([k, v]) => {
     const dt = document.createElement('dt'); dt.textContent = k;
