@@ -86,24 +86,38 @@ mod imp {
 
 #[cfg(target_os = "macos")]
 mod imp {
-    use crate::mac_link::{self, Event};
-    use std::sync::Arc;
+    use crate::mac_link::{self, Event, RunMain};
+    use std::sync::{Arc, OnceLock};
     use tauri::{AppHandle, Emitter};
 
     const SERVICE: u128 = 0xaeac4a03_dff5_498f_843a_34487cf133eb;
+    static RUN_MAIN: OnceLock<RunMain> = OnceLock::new();
+
+    fn run_main(app: &AppHandle) -> &'static RunMain {
+        RUN_MAIN.get_or_init(|| {
+            let app = app.clone();
+            Arc::new(move |f: Box<dyn FnOnce() + Send>| {
+                let _ = app.run_on_main_thread(f);
+            })
+        })
+    }
 
     pub fn connect(app: AppHandle, address: &str) -> Result<(), String> {
+        let rm = run_main(&app).clone();
         let on_event = Arc::new(move |e: Event| match e {
             Event::Data(bytes) => { let _ = app.emit("rfcomm-data", bytes); }
             Event::Closed => { let _ = app.emit("rfcomm-closed", "lost"); }
         });
-        mac_link::connect(address, SERVICE, on_event)
+        mac_link::connect(address, SERVICE, on_event, rm)
     }
     pub fn send(bytes: &[u8]) -> Result<(), String> {
-        mac_link::send(bytes)
+        let rm = RUN_MAIN.get().ok_or("not connected")?;
+        mac_link::send(bytes, rm)
     }
     pub fn disconnect() {
-        mac_link::disconnect()
+        if let Some(rm) = RUN_MAIN.get() {
+            mac_link::disconnect(rm);
+        }
     }
 }
 
