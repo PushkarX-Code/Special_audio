@@ -32,7 +32,7 @@ listen('sa-state', (s) => {
   const connected = s.status === 'connected';
   const controllable = connected && s.kind !== 'system';
   panel.dataset.status = s.status;
-  $('m-status').textContent = connected ? (s.kind === 'demo' ? 'Demo' : 'Connected') : s.status === 'idle' ? 'Not connected' : 'Connecting';
+  $('m-status').textContent = connected ? 'Connected' : s.status === 'idle' ? 'Not connected' : 'Connecting';
   $('m-name').textContent = s.status === 'idle' ? 'No headphones' : s.deviceName ?? 'Headphones';
   ring.setMode(connected ? 'connected' : s.status === 'idle' ? 'idle' : 'connecting');
   ring.setBattery(connected && s.battery ? s.battery.level : connected ? -1 : null);

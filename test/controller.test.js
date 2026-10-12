@@ -34,7 +34,7 @@ test('real headphones: EQ stays locked until Experimental controls are on', asyn
 
   await c.setExperimental(true);
   assert.equal(c.state.features.eq, true);
-  assert.equal(c.state.features.customEq, false, 'custom EQ stays demo-only');
+  assert.equal(c.state.features.customEq, true);
   assert.ok(dev.sentOps.includes(DOP.GET_EQ));
   await c.disconnect();
 });
@@ -53,5 +53,29 @@ test('real headphones: EQ falls back to the other opcode and remembers it', asyn
   await c.setEq('pop');
   assert.equal(c.state.eq, 'pop');
   assert.ok(!dev.sentOps.includes(DOP.SET_EQ), 'goes straight to the opcode that worked');
+  await c.disconnect();
+});
+
+test('custom EQ: bytes match the documented layout and survive a round trip', async () => {
+  const { encodeCustomEq, decodeCustomEq } = await import('../app/src/protocol/drafts.js');
+  const p = encodeCustomEq([4, -2.5, 1]);
+  assert.equal(p.length, 53);
+  assert.equal(p[0], 3);
+  assert.deepEqual(p.slice(1, 5), [0x00, 0x00, 0x80, 0xc0]); // overall gain -4.0 (LE float)
+  assert.equal(p[5], 1); // first band: peak (mid)
+  assert.deepEqual(p.slice(10, 14), [0x00, 0x00, 0x75, 0x44]); // 980 Hz
+  assert.deepEqual(decodeCustomEq(p), [4, -2.5, 1]);
+  assert.deepEqual(decodeCustomEq(encodeCustomEq([9, -9, 0.26])), [6, -6, 0.5]); // clamped, 0.5 dB steps
+});
+
+test('custom EQ reaches the headphones and is read back', async () => {
+  const c = new Controller();
+  c.setExperimental(true);
+  const dev = realHeadphones();
+  await c.connect(dev);
+  assert.equal(c.state.features.customEq, true);
+  await c.setCustomEq([3, 0, -1.5]);
+  assert.deepEqual(c.state.customEq, [3, 0, -1.5]);
+  assert.deepEqual(dev.state.customEq, [3, 0, -1.5]);
   await c.disconnect();
 });

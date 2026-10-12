@@ -2,7 +2,7 @@
 // Byte positions are payload offsets (frame offset minus the 8-byte header).
 // Sources as in commands.js: S1 = ear-web, S2 = BudsLink.
 import { ANC_BYTES } from './commands.js';
-import { EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES } from './drafts.js';
+import { EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, decodeCustomEq } from './drafts.js';
 
 export const IN = {
   BATTERY_REPLY: 0x4007, // S1, S2
@@ -14,6 +14,7 @@ export const IN = {
   MODEL: 0x401c,         // S2 only (draft)
   EQ: 0x4050,            // S1 (draft)
   EQ_ALT: 0x401f,        // S2 (draft)
+  CUSTOM_EQ: 0x4044,     // S1, S2 (draft)
   SPATIAL: 0x404f,       // S1 (draft)
   LOW_LAG_REPLY: 0x4041, // S1, S2
   LOW_LAG_PUSH: 0x7040,  // S2 only
@@ -23,7 +24,7 @@ export const INCOMING_NAMES = {
   [IN.BATTERY_REPLY]: 'battery', [IN.BATTERY_PUSH]: 'battery (push)',
   [IN.FIRMWARE]: 'firmware',
   [IN.ANC_REPLY]: 'noise control', [IN.ANC_PUSH]: 'noise control (push)', [IN.ANC_PUSH_ALT]: 'noise control (push)',
-  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.EQ_ALT]: 'eq preset', [IN.SPATIAL]: 'spatial audio',
+  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.EQ_ALT]: 'eq preset', [IN.CUSTOM_EQ]: 'custom eq', [IN.SPATIAL]: 'spatial audio',
   [IN.LOW_LAG_REPLY]: 'low lag', [IN.LOW_LAG_PUSH]: 'low lag (push)',
 };
 
@@ -64,8 +65,13 @@ export function parseFrame({ command, payload: p }) {
     }
     case IN.EQ:
     case IN.EQ_ALT: {
+      if (p[0] === CUSTOM_PRESET_INDEX) return { eq: 'custom' };
       const preset = EQ_PRESETS.find((x) => x.index === p[0]);
       return preset ? { eq: preset.id } : null;
+    }
+    case IN.CUSTOM_EQ: {
+      const bands = decodeCustomEq(p);
+      return bands ? { customEq: bands } : null;
     }
     case IN.SPATIAL: {
       const found = Object.entries(SPATIAL_BYTES).find(([, [m]]) => m === p[0]);

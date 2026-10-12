@@ -156,8 +156,7 @@ export class Controller {
       eq: isAllowed(DOP.SET_EQ, { allowDraft }),
       spatial: isAllowed(DOP.SET_SPATIAL, { allowDraft }),
       lowLag: isAllowed(DOP.SET_LOW_LAG, { allowDraft }),
-      // Custom EQ bytes are not known from any source yet: demo device only.
-      customEq: this.transport?.kind === 'demo',
+      customEq: isAllowed(DOP.SET_CUSTOM_EQ, { allowDraft }),
     };
   }
 
@@ -169,7 +168,7 @@ export class Controller {
     const demo = this.transport?.kind === 'demo';
     const reads = [
       ...(demo ? [draftCmd.getModel()] : []), cmd.getFirmware(), cmd.getBattery(), cmd.getAnc(),
-      draftCmd.getEq(), draftCmd.getSpatial(), draftCmd.getLowLag(),
+      draftCmd.getEq(), draftCmd.getCustomEq(), draftCmd.getSpatial(), draftCmd.getLowLag(),
     ].filter((c) => isAllowed(c.command, { allowDraft }));
     for (const c of reads) {
       if (!this.session) return;
@@ -243,10 +242,31 @@ export class Controller {
     if (!this.state.features.lowLag) return;
     return this.#write(['lowLag'], { lowLag: on }, draftCmd.setLowLag(on), draftCmd.getLowLag());
   }
-  // Demo device only for now: the custom EQ command is not confirmed (see docs/protocol-research.md).
-  setCustomEq(bands) {
-    if (!this.state.features.customEq) return;
-    this.#set({ customEq: bands.map(Number), eq: 'custom' });
+  // Bass / Mid / Treble in dB. Selects the custom slot, sends the bands, then reads them back.
+  // While a write is in flight, newer values replace older ones, so dragging a slider never queues up.
+  async setCustomEq(bands) {
+    if (!this.state.features.customEq || !this.session || this.state.status !== 'connected') return;
+    this.customQueued = bands.map(Number);
+    this.pending.customEq = this.customQueued; this.pending.eq = 'custom'; this.#notify();
+    if (this.customBusy) return;
+    this.customBusy = true;
+    try {
+      while (this.customQueued && this.session) {
+        const b = this.customQueued;
+        this.customQueued = null;
+        const log = (e) => this.#log({ dir: 'err', label: e.message });
+        if (this.state.eq !== 'custom') await this.session.request(draftCmd.selectCustom(this.eqSetOp)).catch(log);
+        await this.session.request(draftCmd.setCustomEq(b)).catch(log);
+        if (!this.customQueued) {
+          await this.session.request(draftCmd.getCustomEq()).catch(log);
+          await this.session.request(draftCmd.getEq()).catch(log);
+        }
+      }
+    } finally {
+      this.customBusy = false;
+      delete this.pending.customEq; delete this.pending.eq;
+      this.#notify();
+    }
   }
 
   // Headphones the operating system has connected (any brand). Used when no control session is open.

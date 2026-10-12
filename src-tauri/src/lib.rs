@@ -1,5 +1,6 @@
 // Desktop shell: main window, menu bar / tray mini panel, notifications, start at login and updates.
 mod audio;
+mod pc_eq;
 mod bluetooth;
 mod media;
 mod rfcomm;
@@ -56,6 +57,24 @@ fn contact() {
     let _ = std::process::Command::new("cmd").args(["/C", "start", "", url]).spawn();
     #[cfg(not(any(target_os = "macos", windows)))]
     let _ = url;
+}
+
+/// Opens one of a few fixed web pages in the browser. Anything else is refused.
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    const ALLOWED: [&str; 3] = [
+        "https://sourceforge.net/projects/equalizerapo/",
+        "https://github.com/PushkarX-Code/Special_audio",
+        "https://github.com/PushkarX-Code/Special_audio/releases",
+    ];
+    if !ALLOWED.contains(&url.as_str()) {
+        return Err("not allowed".into());
+    }
+    #[cfg(target_os = "macos")]
+    let _ = std::process::Command::new("open").arg(&url).spawn();
+    #[cfg(windows)]
+    let _ = std::process::Command::new("cmd").args(["/C", "start", "", &url]).spawn();
+    Ok(())
 }
 
 #[tauri::command]
@@ -185,7 +204,12 @@ pub fn run() {
             media_control,
             contact,
             audio::visualizer_start,
-            audio::visualizer_stop
+            audio::visualizer_stop,
+            pc_eq::pc_eq_status,
+            pc_eq::pc_eq_apply,
+            pc_eq::pc_eq_allow,
+            pc_eq::pc_eq_configure,
+            open_url
         ])
         .setup(|app| {
             let open = MenuItem::with_id(app, "open", "Open Special Audio", true, None::<&str>)?;

@@ -29,7 +29,7 @@
 
   <div class="shell app" data-status="idle">
     <nav class="tabs" aria-label="Sections" role="tablist">
-      <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span></span>
+      <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span><span class="side-status" id="side-status">Offline</span></span>
       <button type="button" role="tab" class="tab" data-view="home" aria-selected="true">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 11.2 12 4.5l8.2 6.7M6.3 9.4V19.5h4.2v-5.2h3v5.2h4.2V9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Home</span>
@@ -71,10 +71,6 @@
           </div>
           <div class="connect-row" id="idle-row">
             <button class="pill primary" id="bt-btn" type="button">Bluetooth settings</button>
-            <button class="pill" id="demo-btn" type="button">Try demo</button>
-          </div>
-          <div class="connect-row" id="session-row" hidden>
-            <button class="pill" id="disconnect-btn" type="button">Exit demo</button>
           </div>
           <p class="hint" id="hint"></p>
           <button class="pill small" id="retry-btn" type="button" hidden>Try again</button>
@@ -83,20 +79,26 @@
         <div class="cards">
           <section class="card" id="card-noise" data-feature="anc" aria-labelledby="noise-title">
             <div class="card-head">
-              <h2 class="label" id="noise-title">Noise control</h2>
+              <h2 class="label" id="noise-title" data-icon="anc">Noise control</h2>
+              <button type="button" class="info-btn" id="noise-info-btn" aria-expanded="false" aria-controls="noise-info" aria-label="What the modes do" data-icon="info"></button>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <div class="segmented" role="radiogroup" aria-labelledby="noise-title" id="noise-seg">
               <span class="seg-thumb" aria-hidden="true"></span>
-              <button type="button" role="radio" data-value="anc">ANC</button>
-              <button type="button" role="radio" data-value="transparency">Transparency</button>
-              <button type="button" role="radio" data-value="off">Off</button>
+              <button type="button" role="radio" data-value="anc" data-icon="anc">ANC</button>
+              <button type="button" role="radio" data-value="transparency" data-icon="transparency">Transparency</button>
+              <button type="button" role="radio" data-value="off" data-icon="off">Off</button>
+            </div>
+            <div class="info-pop" id="noise-info" hidden>
+              <p><b>ANC</b> blocks the noise around you. High blocks the most, Low the least, and Adaptive adjusts to where you are.</p>
+              <p><b>Transparency</b> lets outside sound in, so you can hear people and traffic.</p>
+              <p><b>Off</b> plays music normally and saves a little battery.</p>
             </div>
             <div class="levels" id="anc-levels" role="radiogroup" aria-label="Noise cancellation strength">
-              <button type="button" role="radio" class="chip small" data-value="high">High</button>
-              <button type="button" role="radio" class="chip small" data-value="mid">Mid</button>
-              <button type="button" role="radio" class="chip small" data-value="low">Low</button>
-              <button type="button" role="radio" class="chip small" data-value="adaptive">Adaptive</button>
+              <button type="button" role="radio" class="chip small" data-value="high" data-icon="high">High</button>
+              <button type="button" role="radio" class="chip small" data-value="mid" data-icon="mid">Mid</button>
+              <button type="button" role="radio" class="chip small" data-value="low" data-icon="low">Low</button>
+              <button type="button" role="radio" class="chip small" data-value="adaptive" data-icon="adaptive">Adaptive</button>
             </div>
           </section>
 
@@ -116,7 +118,7 @@
 
           <section class="card" id="card-quick-eq" data-feature="eq" aria-labelledby="quick-eq-title">
             <div class="card-head">
-              <h2 class="label" id="quick-eq-title">Sound</h2>
+              <h2 class="label" id="quick-eq-title" data-icon="sliders">Sound</h2>
               <button type="button" class="link label" data-goto="sound">Equaliser</button>
             </div>
             <div class="chips wrap" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-eq"></div>
@@ -131,23 +133,24 @@
         <div class="grid">
           <section class="card span-2" id="card-eq" data-feature="eq" aria-labelledby="eq-title">
             <div class="card-head">
-              <h2 class="label" id="eq-title">Equaliser</h2>
+              <h2 class="label" id="eq-title" data-icon="sliders">Equaliser</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <canvas class="eq-canvas" id="eq-canvas" aria-hidden="true"></canvas>
             <div class="chips wrap" role="radiogroup" aria-labelledby="eq-title" id="eq-chips"></div>
           </section>
 
-          <section class="card" id="card-custom" data-feature="customEq" aria-labelledby="custom-title">
+          <section class="card span-2" id="card-custom" data-feature="customEq" aria-labelledby="custom-title">
             <div class="card-head">
-              <h2 class="label" id="custom-title">Custom EQ</h2>
+              <h2 class="label" id="custom-title" data-icon="sliders">Custom EQ</h2>
               <span class="lock label" aria-hidden="true"></span>
+              <div class="head-actions">
+                <button type="button" class="chip small" id="hp-compare" aria-pressed="false" title="Hear it flat while held on">Compare</button>
+                <button type="button" class="chip small" id="hp-reset">Flat</button>
+              </div>
             </div>
-            <div class="sliders" id="custom-sliders">
-              <label class="slider"><span class="label">Bass</span><input type="range" min="-6" max="6" step="0.5" value="0" data-band="0"><output>0</output></label>
-              <label class="slider"><span class="label">Mid</span><input type="range" min="-6" max="6" step="0.5" value="0" data-band="1"><output>0</output></label>
-              <label class="slider"><span class="label">Treble</span><input type="range" min="-6" max="6" step="0.5" value="0" data-band="2"><output>0</output></label>
-            </div>
+            <p class="desc eq-sub">On the headphones, so it follows them to your phone. Low shelf 140 Hz · Peak 980 Hz · High shelf 3.5 kHz · ±6 dB</p>
+            <div id="hp-eq"></div>
             <div class="save-row">
               <input type="text" class="text-input" id="preset-name" placeholder="Name this sound" maxlength="20" aria-label="Preset name">
               <button type="button" class="pill small" id="preset-save">Save</button>
@@ -155,15 +158,35 @@
             <div class="chips wrap" id="my-presets" aria-label="My presets"></div>
           </section>
 
+          <section class="card span-2" id="card-pceq" data-pc hidden aria-labelledby="pceq-title">
+            <div class="card-head">
+              <h2 class="label" id="pceq-title" data-icon="sliders">PC equaliser</h2>
+              <span class="label preamp" id="pc-preamp"></span>
+              <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="pceq-title" id="pc-switch"><span class="knob"></span></button>
+            </div>
+            <p class="desc eq-sub">10 bands for everything your PC plays, on top of the headphone EQ. 31 Hz to 16 kHz · ±12 dB · automatic headroom</p>
+            <div class="pc-setup" id="pc-setup" hidden>
+              <p class="desc" id="pc-setup-text"></p>
+              <button type="button" class="pill small primary" id="pc-setup-btn"></button>
+            </div>
+            <div id="pc-eq"></div>
+            <div class="chips wrap" role="radiogroup" aria-label="PC presets" id="pc-presets"></div>
+            <div class="save-row">
+              <input type="text" class="text-input" id="pc-preset-name" placeholder="Name this curve" maxlength="20" aria-label="PC preset name">
+              <button type="button" class="pill small" id="pc-preset-save">Save</button>
+            </div>
+            <div class="chips wrap" id="pc-my-presets" aria-label="My PC presets"></div>
+          </section>
+
           <section class="card" id="card-spatial" data-feature="spatial" aria-labelledby="spatial-title">
             <div class="card-head">
-              <h2 class="label" id="spatial-title">Spatial audio</h2>
+              <h2 class="label" id="spatial-title" data-icon="spatial">Spatial audio</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <div class="chips" role="radiogroup" aria-labelledby="spatial-title" id="spatial-chips">
-              <button type="button" role="radio" class="chip" data-value="off">Off</button>
-              <button type="button" role="radio" class="chip" data-value="cinema">Cinema</button>
-              <button type="button" role="radio" class="chip" data-value="concert">Concert</button>
+              <button type="button" role="radio" class="chip" data-value="off" data-icon="off">Off</button>
+              <button type="button" role="radio" class="chip" data-value="cinema" data-icon="cinema">Cinema</button>
+              <button type="button" role="radio" class="chip" data-value="concert" data-icon="concert">Concert</button>
             </div>
           </section>
         </div>
@@ -176,27 +199,13 @@
         <div class="grid">
           <section class="card row" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
             <div>
-              <div class="card-head"><h2 class="label" id="lowlag-title">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
+              <div class="card-head"><h2 class="label" id="lowlag-title" data-icon="bolt">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
               <p class="desc">Less audio delay for games and video.</p>
             </div>
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="lowlag-title" id="lowlag-switch"><span class="knob"></span></button>
           </section>
-          <section class="card row soon" aria-labelledby="hq-title">
-            <div>
-              <div class="card-head"><h2 class="label" id="hq-title">High quality audio</h2><span class="label soon-tag">Coming soon</span></div>
-              <p class="desc">LDAC for more detail over Bluetooth.</p>
-            </div>
-            <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="hq-title" disabled><span class="knob"></span></button>
-          </section>
-          <section class="card row soon" aria-labelledby="dirac-title">
-            <div>
-              <div class="card-head"><h2 class="label" id="dirac-title">Dirac Opteo</h2><span class="label soon-tag">Coming soon</span></div>
-              <p class="desc">Tuning that corrects the headphones' own sound.</p>
-            </div>
-            <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="dirac-title" disabled><span class="knob"></span></button>
-          </section>
           <section class="card" aria-labelledby="details-title">
-            <div class="card-head"><h2 class="label" id="details-title">Device</h2></div>
+            <div class="card-head"><h2 class="label" id="details-title" data-icon="headphones">Device</h2></div>
             <dl class="details" id="device-details"></dl>
           </section>
         </div>
@@ -275,7 +284,7 @@
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="autoupd-title" id="autoupd-switch"><span class="knob"></span></button>
           </section>
           <section class="card span-2">
-            <p class="desc">Every version and its changes: <a class="link" href="https://github.com/PushkarX-Code/Special_audio/releases" target="_blank" rel="noopener" data-external>Releases page</a></p>
+            <p class="desc">Every version and its changes: <button type="button" class="link" data-open="https://github.com/PushkarX-Code/Special_audio/releases">Releases page</button></p>
           </section>
         </div>
       </section>
@@ -293,40 +302,31 @@
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="notif-title" id="notif-switch"><span class="knob"></span></button>
           </section>
           <section class="card row" data-desktop aria-labelledby="exp-title">
-            <div><div class="card-head"><h2 class="label" id="exp-title">Experimental controls</h2></div><p class="desc">Unlock EQ presets, spatial audio and low lag on the CMF Headphone Pro. These commands come from community research and aren't confirmed yet. The app checks what the headphones report back after every change.</p></div>
-            <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
+            <div><div class="card-head"><h2 class="label" id="exp-title">Full headphone control</h2></div><p class="desc">EQ presets, custom EQ, spatial audio and low lag on the CMF Headphone Pro. Every change is checked against what the headphones report back.</p></div>
+            <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
           </section>
-          <section class="card" aria-labelledby="about-title">
+          <section class="card span-2 dev-card" aria-labelledby="dev-title">
+            <div class="card-head"><h2 class="label" id="dev-title">Developer</h2></div>
+            <div class="dev-row">
+              <div class="dev-id">
+                <p class="dev-name dot">Pushkar</p>
+                <p class="desc">Indie developer. Makes cool things.</p>
+              </div>
+              <div class="dev-links">
+                <button type="button" class="pill small primary" id="contact-btn">Contact</button>
+                <button type="button" class="pill small" data-open="https://github.com/PushkarX-Code/Special_audio">GitHub</button>
+              </div>
+            </div>
+          </section>
+          <section class="card span-2" aria-labelledby="about-title">
             <div class="card-head"><h2 class="label" id="about-title">About</h2></div>
-            <p class="desc">Special Audio is a free, open-source app. Unofficial. Not affiliated with Nothing Technology Ltd. Use at your own risk.</p>
-            <p class="desc"><a class="link" href="https://github.com/PushkarX-Code/Special_audio" target="_blank" rel="noopener">github.com/PushkarX-Code/Special_audio</a></p>
-          </section>
-          <section class="card row" aria-labelledby="contact-title">
-            <div><div class="card-head"><h2 class="label" id="contact-title">Contact us</h2></div><p class="desc">Questions, ideas or a bug? Send us a message.</p></div>
-            <button type="button" class="pill small" id="contact-btn">Contact us</button>
+            <p class="desc">Special Audio is free and open source. Unofficial app, not affiliated with Nothing Technology Ltd.</p>
           </section>
         </div>
       </section>
     </div>
   </div>
 
-  <!-- Hidden troubleshooting panel: Ctrl+Shift+D (Cmd+Shift+D on Mac). -->
-  <section class="devpanel card" id="devpanel" hidden aria-label="Troubleshooting">
-    <dl class="dev-grid" id="dev-details"></dl>
-    <div class="dev-actions" id="demo-actions" hidden>
-      <span class="label">Simulate</span>
-      <button type="button" class="chip small" data-sim="button">Noise button</button>
-      <button type="button" class="chip small" data-sim="low">Battery 12%</button>
-      <button type="button" class="chip small" data-sim="charge">Charging</button>
-      <button type="button" class="chip small" data-sim="drop">Drop link</button>
-    </div>
-    <div class="dev-actions">
-      <span class="label">Frames</span>
-      <button type="button" class="chip small" id="log-copy">Copy</button>
-      <button type="button" class="chip small" id="log-clear">Clear</button>
-    </div>
-    <ol class="log" id="log" aria-live="off"></ol>
-  </section>
 
   <!-- Update screen: shown when a new version is found -->
   <div class="upd-screen" id="upd-screen" role="dialog" aria-modal="true" aria-labelledby="upd-screen-title" hidden>

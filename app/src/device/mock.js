@@ -1,8 +1,8 @@
-// Demo headphone. Same interface as the real transports, speaks real frames, replies with realistic delays.
+// Simulated headphone for tests and screenshots. Same interface as the real transports, speaks real frames, replies with realistic delays.
 // Reply shapes follow docs/protocol-research.md. Where the real device's behaviour is unknown, the guess is marked.
 import { encodeFrame, FrameParser } from '../protocol/frame.js';
 import { OP, ANC_BYTES } from '../protocol/commands.js';
-import { DOP, EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES } from '../protocol/drafts.js';
+import { DOP, EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, encodeCustomEq, decodeCustomEq } from '../protocol/drafts.js';
 import { IN } from '../protocol/parser.js';
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -14,8 +14,8 @@ export class MockHeadphones {
 
   constructor() {
     this.state = {
-      battery: 82, charging: false, firmware: '1.0.0.27-demo', model: [0x75, 0xb1],
-      noise: 'high', eq: 'dirac', spatial: 'off', lowLag: false,
+      battery: 82, charging: false, firmware: '1.0.0.27', model: [0x75, 0xb1],
+      noise: 'high', eq: 'dirac', spatial: 'off', lowLag: false, customEq: [0, 0, 0],
     };
     this.dataCb = () => {};
     this.closeCb = () => {};
@@ -39,7 +39,7 @@ export class MockHeadphones {
   async disconnect() { this.#close('user'); }
 
   async send(bytes) {
-    if (!this.open) throw new Error('demo device is not connected');
+    if (!this.open) throw new Error('simulated device is not connected');
     this.parser.push(bytes);
   }
 
@@ -90,10 +90,17 @@ export class MockHeadphones {
         return ack();
       }
       case DOP.GET_MODEL: return reply(IN.MODEL, s.model);
-      case DOP.GET_EQ: return reply(IN.EQ, [EQ_PRESETS.find((p) => p.id === s.eq).index]);
+      case DOP.GET_EQ: return reply(IN.EQ, [s.eq === 'custom' ? CUSTOM_PRESET_INDEX : EQ_PRESETS.find((p) => p.id === s.eq).index]);
       case DOP.SET_EQ: {
         const p = EQ_PRESETS.find((x) => x.index === payload[0]);
         if (p) s.eq = p.id;
+        if (payload[0] === CUSTOM_PRESET_INDEX) s.eq = 'custom';
+        return ack();
+      }
+      case DOP.GET_CUSTOM_EQ: return reply(IN.CUSTOM_EQ, encodeCustomEq(s.customEq));
+      case DOP.SET_CUSTOM_EQ: {
+        const bands = decodeCustomEq(payload);
+        if (bands) s.customEq = bands;
         return ack();
       }
       case DOP.GET_SPATIAL: return reply(IN.SPATIAL, SPATIAL_BYTES[s.spatial]);

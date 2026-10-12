@@ -1,19 +1,21 @@
 # Special Audio
 
-A desktop app for the **CMF Headphone Pro** on Windows and Mac. Check battery, switch noise control, spatial audio, EQ and Low Lag mode from your computer. No account, no sign-in.
+A desktop app for the **CMF Headphone Pro** on Windows and Mac. Battery, noise control, EQ presets, a pro custom EQ that lives on the headphones, a 10-band PC equaliser, spatial audio and low lag. No account, no sign-in.
 
-> Unofficial. Not affiliated with Nothing Technology Ltd. Use at your own risk.
+Made by **Pushkar**, an indie developer who makes cool things.
+
+> Unofficial. Not affiliated with Nothing Technology Ltd.
 
 ![Special Audio home screen: headphone name, live battery ring and noise control](docs/screenshots/home-dark.png)
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/sound-dark.png" alt="Sound tab: EQ presets, custom EQ sliders with a saved preset, spatial audio"></td>
-    <td width="50%"><img src="docs/screenshots/home-light.png" alt="Home screen in light mode"></td>
+    <td width="50%"><img src="docs/screenshots/sound-dark.png" alt="Sound tab: EQ presets, custom EQ graph editor, 10-band PC equaliser, spatial audio"></td>
+    <td width="50%"><img src="docs/screenshots/home-light.png" alt="Home screen in light mode"><br><br><img src="docs/screenshots/settings-dark.png" alt="Settings"></td>
   </tr>
   <tr>
-    <td align="center"><b>Sound</b>: presets, your own custom EQ, spatial audio</td>
-    <td align="center"><b>Light mode</b>, or follow your system</td>
+    <td align="center"><b>Sound</b>: presets, custom EQ, PC equaliser, spatial audio</td>
+    <td align="center"><b>Light mode</b> and <b>Settings</b></td>
   </tr>
 </table>
 
@@ -71,11 +73,11 @@ There's no warning because the warning only appears for files downloaded through
 | Tab | What it does |
 |---|---|
 | **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
-| **Sound** | EQ presets, custom EQ (bass, mid, treble) with presets you name and save, spatial audio |
-| **Hi-Fi** | Low lag mode, high quality audio, Dirac Opteo, device details |
+| **Sound** | EQ presets; custom EQ on the headphones (drag the curve or set each band in 0.5 dB steps, compare, save presets); 10-band PC equaliser with presets and automatic headroom; spatial audio |
+| **Hi-Fi** | Low lag mode, device details |
 | **Update** | Your version, what's new, and one-click updates |
 | **Look** | Theme, accent colour, round or square dots, glass style, full or calm animation, music visualizer |
-| **Settings** | Start at login, connection notifications, experimental controls, contact us |
+| **Settings** | Start at login, notifications, full headphone control, developer and contact |
 
 It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.
 
@@ -90,12 +92,14 @@ It also lives in your **menu bar (Mac) or system tray (Windows)**: click the ico
 | Music controls: song, play/pause, next, previous | Any music app | Spotify and Apple Music |
 | Visualizer: the ring and music card move with your music | Yes, from the real sound | A gentle pulse while music plays |
 | Menu bar / tray panel, start at login, in-app updates, custom looks | Yes | Yes |
-| CMF Headphone Pro: EQ presets, spatial audio, low lag | Turn on **Settings → Experimental controls** | Next update |
-| CMF Headphone Pro: custom EQ (bass, mid, treble) | In the demo for now | |
+| CMF Headphone Pro: EQ presets, custom EQ, spatial audio, low lag | Yes | Next update |
+| PC equaliser, 10 bands, for everything the computer plays | Yes, with the free [Equalizer APO](https://sourceforge.net/projects/equalizerapo/) | |
 
 Close the Nothing X app on your phone before connecting: the headphones accept one controller at a time.
 
-**Experimental controls** use commands from community research that haven't been confirmed on this headphone yet. After every change the app asks the headphones what they actually switched to and shows that. If EQ doesn't change, the app tries the second known command once and remembers the one that works. Turn it off any time.
+After every change the app asks the headphones what they actually switched to and shows that, so what you see is what's playing.
+
+**PC equaliser setup (Windows, once):** the Sound tab walks you through it. Install Equalizer APO, tick your headphones in the list it shows, restart, then click **Allow** in Special Audio. After that the curve applies to everything your PC plays.
 
 ---
 
@@ -119,7 +123,7 @@ GitHub builds them: **Actions → Build app → Run workflow**. That publishes a
 
 ### Safety
 
-- Only commands confirmed by two independent sources (later: by a real capture) can reach real headphones. Draft commands need Settings → Experimental controls. Anything else throws before it is sent.
+- Every outgoing command is on a fixed allowlist. Commands documented by two independent sources are always on; commands from one source (EQ, custom EQ, spatial, low lag) can be switched off in Settings → Full headphone control. Anything else throws before it is sent.
 - No firmware, reset or pairing commands exist in the code.
 - One command per 150 ms. Every command waits for the device reply, with one retry.
 - Raw Bluetooth logs are git-ignored: they contain addresses and serial numbers.
@@ -130,7 +134,7 @@ GitHub builds them: **Actions → Build app → Run workflow**. That publishes a
 ```
 app/                 the interface (plain HTML, CSS, JavaScript, no build step)
   src/protocol/      frame + CRC, confirmed commands, draft commands, allowlist, parser
-  src/device/        session (rate limit, retry), controller (state), demo device
+  src/device/        session (rate limit, retry), controller (state), simulated device for tests
   src/ui/            battery gauge, background, EQ visual, controls, developer panel
 src-tauri/           desktop app shell (Tauri), icons, Windows/Mac packaging
 docs/                protocol research, screenshots
