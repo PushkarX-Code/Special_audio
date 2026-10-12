@@ -198,7 +198,7 @@
         <h1 class="view-title dot">Hi-Fi</h1>
         <p class="notice card" data-notice hidden></p>
         <div class="grid">
-          <section class="card" id="card-codec" data-feature="codec" aria-labelledby="codec-title">
+          <section class="card span-2" id="card-codec" data-feature="codec" aria-labelledby="codec-title">
             <div class="card-head"><h2 class="label" id="codec-title" data-icon="headphones">Audio quality</h2><span class="lock label" aria-hidden="true"></span></div>
             <p class="desc eq-sub">LDAC carries more detail to phones that support it. Computers use AAC. The headphones restart to switch.</p>
             <div class="chips" role="radiogroup" aria-labelledby="codec-title" id="codec-chips">
@@ -206,7 +206,7 @@
               <button type="button" role="radio" class="chip" data-value="ldac">LDAC</button>
             </div>
           </section>
-          <section class="card row" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
+          <section class="card row span-2" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
             <div>
               <div class="card-head"><h2 class="label" id="lowlag-title" data-icon="bolt">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
               <p class="desc">Less audio delay for games and video.</p>
@@ -311,9 +311,13 @@
             <div><div class="card-head"><h2 class="label" id="notif-title">Notifications</h2></div><p class="desc">Tell me when headphones connect.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="notif-title" id="notif-switch"><span class="knob"></span></button>
           </section>
-          <section class="card row" data-desktop aria-labelledby="exp-title">
+          <section class="card row span-2" data-desktop aria-labelledby="exp-title">
             <div><div class="card-head"><h2 class="label" id="exp-title">Full headphone control</h2></div><p class="desc">EQ presets, custom EQ, spatial audio and low lag on the CMF Headphone Pro. Every change is checked against what the headphones report back.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
+          </section>
+          <section class="card row span-2" aria-labelledby="reset-title">
+            <div><div class="card-head"><h2 class="label" id="reset-title">Reset</h2></div><p class="desc">Puts every setting back to how it started, including the headphones' sound. Your saved presets stay.</p></div>
+            <button type="button" class="pill small" id="reset-btn">Reset all</button>
           </section>
           <section class="card span-2 dev-card" aria-labelledby="dev-title">
             <div class="card-head"><h2 class="label" id="dev-title">Developer</h2></div>

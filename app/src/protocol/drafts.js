@@ -95,19 +95,19 @@ export const CODECS = { aac: 0, ldac: 2 };
 // Physical controls on the B175 (official defaultControl 060A0701 060A010B 06050123 06010716, S2 slots).
 // device 0x06 = headphones; button 0x0A action button, 0x01 roller, 0x05 energy slider; type 0x01 press/slide, 0x07 hold.
 export const CONTROL_SLOTS = [
-  { id: 'press', label: 'Action button · press', button: 0x0a, type: 0x01 },
-  { id: 'hold', label: 'Action button · hold', button: 0x0a, type: 0x07 },
-  { id: 'roller', label: 'Roller · hold', button: 0x01, type: 0x07 },
+  { id: 'press', label: 'Button press', button: 0x0a, type: 0x01 },
+  { id: 'hold', label: 'Button hold', button: 0x0a, type: 0x07 },
+  { id: 'roller', label: 'Roller hold', button: 0x01, type: 0x07 },
   { id: 'slider', label: 'Energy slider', button: 0x05, type: 0x01 },
 ];
 // Action codes (S2 B175 mapping; noise control uses the official default code 0x16).
 export const CONTROL_ACTIONS = {
-  assistant: { label: 'Voice assistant', code: 0x0b },
-  noise: { label: 'Noise control', code: 0x16 },
-  spatial: { label: 'Spatial audio', code: 0x1b },
-  eq: { label: 'Next EQ preset', code: 0x22 },
-  mic: { label: 'Mic on / off', code: 0x1d },
-  none: { label: 'Nothing', code: 0x01 },
+  assistant: { label: 'Assistant', code: 0x0b },
+  noise: { label: 'Noise', code: 0x16 },
+  spatial: { label: 'Spatial', code: 0x1b },
+  eq: { label: 'Next EQ', code: 0x22 },
+  mic: { label: 'Mic mute', code: 0x1d },
+  none: { label: 'Off', code: 0x01 },
   bass: { label: 'Bass', code: 0x23 },
   treble: { label: 'Treble', code: 0x24 },
 };

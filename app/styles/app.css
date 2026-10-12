@@ -611,7 +611,9 @@ button.link { background: none; border: 0; padding: 0; font: inherit; cursor: po
 
 /* Hi-Fi: one control per row, label left, choices right */
 @media (min-width: 900px) {
-  .control-row { grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; }
+  .control-row { grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 16px; }
   .control-row .chips.grid-chips { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 #card-lowlag { align-items: center; }
+#card-controls .chip.small { height: 44px; font-size: 11px; letter-spacing: 0.08em; padding: 0 8px; }
+#card-codec .chips { max-width: 420px; }
