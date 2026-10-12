@@ -1,4 +1,5 @@
-### Fixed
-- EQ, spatial audio and low lag now show an Unlock button right on the card, so you don't have to go to Settings
-- Turning on Experimental controls could lock every control on some headphones. It no longer does
-- If the headphones don't accept an EQ preset, the app now tells you instead of doing nothing
+### New
+- Icons on every button: noise modes, ANC strength, EQ presets and spatial audio
+- Icons next to card titles, and an (i) button on Noise control that explains each mode
+- Sidebar shows whether your headphones are connected, with bigger tabs and a red marker on the one you're on
+- A small battery icon under the battery %

@@ -29,7 +29,7 @@
 
   <div class="shell app" data-status="idle">
     <nav class="tabs" aria-label="Sections" role="tablist">
-      <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span></span>
+      <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span><span class="side-status" id="side-status">Offline</span></span>
       <button type="button" role="tab" class="tab" data-view="home" aria-selected="true">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 11.2 12 4.5l8.2 6.7M6.3 9.4V19.5h4.2v-5.2h3v5.2h4.2V9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Home</span>
@@ -66,6 +66,7 @@
             <canvas id="hero-canvas"></canvas>
             <div class="gauge-center">
               <div class="pct-row"><span class="pct dot" id="pct"></span><span class="unit" id="pct-unit" hidden>%</span></div>
+              <span class="batt" id="batt" hidden><span class="batt-fill" id="batt-fill"></span></span>
               <span class="label" id="pct-label" aria-live="polite">Offline</span>
             </div>
           </div>
@@ -74,7 +75,7 @@
             <button class="pill" id="demo-btn" type="button">Try demo</button>
           </div>
           <div class="connect-row" id="session-row" hidden>
-            <button class="pill" id="disconnect-btn" type="button">Exit demo</button>
+            <button class="pill" id="disconnect-btn" type="button" data-icon="exit">Exit demo</button>
           </div>
           <p class="hint" id="hint"></p>
           <button class="pill small" id="retry-btn" type="button" hidden>Try again</button>
@@ -83,20 +84,26 @@
         <div class="cards">
           <section class="card" id="card-noise" data-feature="anc" aria-labelledby="noise-title">
             <div class="card-head">
-              <h2 class="label" id="noise-title">Noise control</h2>
+              <h2 class="label" id="noise-title" data-icon="anc">Noise control</h2>
+              <button type="button" class="info-btn" id="noise-info-btn" aria-expanded="false" aria-controls="noise-info" aria-label="What the modes do" data-icon="info"></button>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <div class="segmented" role="radiogroup" aria-labelledby="noise-title" id="noise-seg">
               <span class="seg-thumb" aria-hidden="true"></span>
-              <button type="button" role="radio" data-value="anc">ANC</button>
-              <button type="button" role="radio" data-value="transparency">Transparency</button>
-              <button type="button" role="radio" data-value="off">Off</button>
+              <button type="button" role="radio" data-value="anc" data-icon="anc">ANC</button>
+              <button type="button" role="radio" data-value="transparency" data-icon="transparency">Transparency</button>
+              <button type="button" role="radio" data-value="off" data-icon="off">Off</button>
+            </div>
+            <div class="info-pop" id="noise-info" hidden>
+              <p><b>ANC</b> blocks the noise around you. High blocks the most, Low the least, and Adaptive adjusts to where you are.</p>
+              <p><b>Transparency</b> lets outside sound in, so you can hear people and traffic.</p>
+              <p><b>Off</b> plays music normally and saves a little battery.</p>
             </div>
             <div class="levels" id="anc-levels" role="radiogroup" aria-label="Noise cancellation strength">
-              <button type="button" role="radio" class="chip small" data-value="high">High</button>
-              <button type="button" role="radio" class="chip small" data-value="mid">Mid</button>
-              <button type="button" role="radio" class="chip small" data-value="low">Low</button>
-              <button type="button" role="radio" class="chip small" data-value="adaptive">Adaptive</button>
+              <button type="button" role="radio" class="chip small" data-value="high" data-icon="high">High</button>
+              <button type="button" role="radio" class="chip small" data-value="mid" data-icon="mid">Mid</button>
+              <button type="button" role="radio" class="chip small" data-value="low" data-icon="low">Low</button>
+              <button type="button" role="radio" class="chip small" data-value="adaptive" data-icon="adaptive">Adaptive</button>
             </div>
           </section>
 
@@ -116,7 +123,7 @@
 
           <section class="card" id="card-quick-eq" data-feature="eq" aria-labelledby="quick-eq-title">
             <div class="card-head">
-              <h2 class="label" id="quick-eq-title">Sound</h2>
+              <h2 class="label" id="quick-eq-title" data-icon="sliders">Sound</h2>
               <button type="button" class="link label" data-goto="sound">Equaliser</button>
             </div>
             <div class="chips wrap" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-eq"></div>
@@ -131,7 +138,7 @@
         <div class="grid">
           <section class="card span-2" id="card-eq" data-feature="eq" aria-labelledby="eq-title">
             <div class="card-head">
-              <h2 class="label" id="eq-title">Equaliser</h2>
+              <h2 class="label" id="eq-title" data-icon="sliders">Equaliser</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <canvas class="eq-canvas" id="eq-canvas" aria-hidden="true"></canvas>
@@ -140,7 +147,7 @@
 
           <section class="card" id="card-custom" data-feature="customEq" aria-labelledby="custom-title">
             <div class="card-head">
-              <h2 class="label" id="custom-title">Custom EQ</h2>
+              <h2 class="label" id="custom-title" data-icon="sliders">Custom EQ</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <div class="sliders" id="custom-sliders">
@@ -157,13 +164,13 @@
 
           <section class="card" id="card-spatial" data-feature="spatial" aria-labelledby="spatial-title">
             <div class="card-head">
-              <h2 class="label" id="spatial-title">Spatial audio</h2>
+              <h2 class="label" id="spatial-title" data-icon="spatial">Spatial audio</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <div class="chips" role="radiogroup" aria-labelledby="spatial-title" id="spatial-chips">
-              <button type="button" role="radio" class="chip" data-value="off">Off</button>
-              <button type="button" role="radio" class="chip" data-value="cinema">Cinema</button>
-              <button type="button" role="radio" class="chip" data-value="concert">Concert</button>
+              <button type="button" role="radio" class="chip" data-value="off" data-icon="off">Off</button>
+              <button type="button" role="radio" class="chip" data-value="cinema" data-icon="cinema">Cinema</button>
+              <button type="button" role="radio" class="chip" data-value="concert" data-icon="concert">Concert</button>
             </div>
           </section>
         </div>
@@ -176,7 +183,7 @@
         <div class="grid">
           <section class="card row" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
             <div>
-              <div class="card-head"><h2 class="label" id="lowlag-title">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
+              <div class="card-head"><h2 class="label" id="lowlag-title" data-icon="bolt">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
               <p class="desc">Less audio delay for games and video.</p>
             </div>
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="lowlag-title" id="lowlag-switch"><span class="knob"></span></button>
@@ -196,7 +203,7 @@
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="dirac-title" disabled><span class="knob"></span></button>
           </section>
           <section class="card" aria-labelledby="details-title">
-            <div class="card-head"><h2 class="label" id="details-title">Device</h2></div>
+            <div class="card-head"><h2 class="label" id="details-title" data-icon="headphones">Device</h2></div>
             <dl class="details" id="device-details"></dl>
           </section>
         </div>

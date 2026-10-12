@@ -13,6 +13,7 @@ import { createEqVisual } from './ui/eq-visual.js';
 import { radioGroup, switchControl, dotRipple } from './ui/controls.js';
 import { createDevPanel } from './ui/devpanel.js';
 import { createUpdates } from './ui/updates.js';
+import { addIcons } from './ui/icons.js';
 import { isDesktop, invoke, emit, listen, watchSystemHeadphones, prefs } from './platform.js';
 
 const $ = (id) => document.getElementById(id);
@@ -165,11 +166,23 @@ const spatial = radioGroup($('spatial-chips'), (v, btn) => { dotRipple(btn); con
 
 const presetChip = (p) => {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.value = p.id; b.textContent = p.label;
+  b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.value = p.id; b.dataset.icon = p.id; b.textContent = p.label;
   return b;
 };
 $('eq-chips').append(...EQ_PRESETS.map(presetChip));
 $('quick-eq').append(...EQ_PRESETS.map(presetChip));
+addIcons();
+
+// Noise control (i): what each mode does
+$('noise-info-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = $('noise-info').hidden;
+  $('noise-info').hidden = !open;
+  $('noise-info-btn').setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', (e) => {
+  if (!$('noise-info').hidden && !e.target.closest('#noise-info')) { $('noise-info').hidden = true; $('noise-info-btn').setAttribute('aria-expanded', 'false'); }
+});
 const eq = radioGroup($('eq-chips'), (v) => controller.setEq(v));
 const quickEq = radioGroup($('quick-eq'), (v) => controller.setEq(v));
 const lowLag = switchControl($('lowlag-switch'), (on) => controller.setLowLag(on));
@@ -286,6 +299,9 @@ controller.subscribe((s) => {
   const hasBattery = connected && !!s.battery;
   $('pct').textContent = hasBattery ? String(s.battery.level) : '';
   $('pct-unit').hidden = !hasBattery;
+  $('side-status').textContent = connected ? (s.kind === 'demo' ? 'Demo' : 'Connected') : busy ? 'Connecting' : 'Offline';
+  $('batt').hidden = !hasBattery;
+  if (hasBattery) { $('batt-fill').style.width = `${s.battery.level}%`; $('batt').dataset.charging = String(!!s.battery.charging); }
   $('pct-label').textContent = busy ? STATUS_TEXT[s.status] : !connected ? 'Offline' : !hasBattery ? 'Connected' : s.battery.charging ? 'Charging' : 'Battery';
   app.dataset.low = String(hasBattery && s.battery.level <= 20);
   app.dataset.nobattery = String(connected && !hasBattery);
