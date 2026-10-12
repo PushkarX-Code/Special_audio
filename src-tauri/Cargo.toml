@@ -1,6 +1,6 @@
 [package]
 name = "special-audio"
-version = "0.7.0"
+version = "0.7.1"
 description = "Unofficial desktop companion for the CMF Headphone Pro"
 authors = ["Pushkar Choudhury"]
 license = "MIT"
@@ -28,6 +28,11 @@ serde_json = "1"
 [target.'cfg(windows)'.dependencies]
 wasapi = "0.19"
 windows = { version = "0.61", features = ["Devices_Bluetooth", "Devices_Bluetooth_Rfcomm", "Devices_Enumeration", "Foundation", "Foundation_Collections", "Networking", "Networking_Sockets", "Storage_Streams", "Media_Control"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString", "NSRunLoop", "NSDate", "NSObject"] }
+objc2-io-bluetooth = { version = "0.3", default-features = false, features = ["std", "objc2", "objc2-foundation", "Bluetooth", "IOBluetoothDevice", "IOBluetoothRFCOMMChannel", "IOBluetoothSDPUUID", "IOBluetoothSDPServiceRecord", "IOBluetoothObject", "IOBluetoothUserLib"] }
 
 [profile.release]
 codegen-units = 1

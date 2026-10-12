@@ -121,15 +121,19 @@ if (!isDesktop) $('bt-btn').hidden = true;
 const CMF = /CMF Headphone Pro/i;
 let systemDevice = null;
 let controlError = null;
+let opening = false; // while the control channel opens, its errors show under the ring, not as a toast
 const resync = () => controller.setSystemDevice(systemDevice);
 async function openControls(dev) {
   if (!isDesktop || !dev?.address || !CMF.test(dev.name) || controller.session) return;
   controlError = null;
+  opening = true;
   try {
     await controller.connect(new NativeHeadphones(dev));
   } catch (e) {
     controlError = e.message;
     resync();
+  } finally {
+    opening = false;
   }
 }
 watchSystemHeadphones((dev) => {
@@ -315,7 +319,7 @@ controller.subscribe((s) => {
   $('pct').textContent = hasBattery ? String(s.battery.level) : '';
   $('pct-unit').hidden = !hasBattery;
   $('side-status').textContent = connected ? 'Connected' : busy ? 'Connecting' : 'Offline';
-  $('pct-label').textContent = busy ? STATUS_TEXT[s.status] : !connected ? 'Offline' : !hasBattery ? 'Connected' : s.battery.charging ? 'Charging' : '';
+  $('pct-label').textContent = busy ? STATUS_TEXT[s.status] : !connected ? 'Offline' : hasBattery && s.battery.charging ? 'Charging' : '';
   app.dataset.low = String(hasBattery && s.battery.level <= 20);
   app.dataset.nobattery = String(connected && !hasBattery);
 
@@ -378,7 +382,8 @@ controller.subscribe((s) => {
     return [dt, dd];
   }));
 
-  if (s.error && s.error !== lastError) toast(s.error);
+  // connection errors are already shown under the ring; toast everything else once
+  if (s.error && s.error !== lastError && !opening && s.error !== controlError) toast(s.error);
   lastError = s.error;
 });
 

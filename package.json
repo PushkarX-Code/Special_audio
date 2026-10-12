@@ -1,6 +1,6 @@
 {
   "name": "special-audio",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "private": true,
   "description": "Unofficial desktop companion for the CMF Headphone Pro.",
   "type": "module",
