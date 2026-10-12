@@ -168,7 +168,7 @@ h1, h2, p { margin: 0; }
   transition: color 200ms ease, background-color 200ms ease, transform var(--dur-small) var(--spring-tight);
 }
 .tab svg { width: 20px; height: 20px; }
-.tab[aria-selected="true"] { color: var(--fg); background: var(--faint); }
+.tab[aria-selected="true"] { color: var(--fg); }
 .tab:active { transform: scale(0.95); }
 
 @media (min-width: 780px) {
@@ -400,7 +400,7 @@ h1, h2, p { margin: 0; }
 
 /* hidden troubleshooting panel (Ctrl/Cmd+Shift+D) */
 /* ---------- look: accent swatches, glass styles ---------- */
-.swatches { gap: 12px; }
+
 .swatch {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--swatch); border: 2px solid transparent;
@@ -529,7 +529,7 @@ body.mini { min-height: 0; overflow: hidden; }
 
 /* sidebar: status, bigger tabs, active bar */
 .side-status { display: none; }
-.app[data-status="connected"] .status-dot { background: #30d158; box-shadow: 0 0 10px rgb(48 209 88 / 0.6); }
+.app[data-status="connected"] .status-dot { background: var(--fg); box-shadow: 0 0 10px rgb(var(--fg-rgb) / 0.5); }
 @media (min-width: 780px) {
   .shell { grid-template-columns: 104px minmax(0, 1fr); }
   .tabs { gap: 8px; padding: 22px 10px; }
@@ -537,8 +537,6 @@ body.mini { min-height: 0; overflow: hidden; }
   .side-status { display: block; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .tab { position: relative; width: 82px; padding: 12px 6px 10px; gap: 6px; font-size: 11px; text-transform: none; letter-spacing: 0.02em; border-radius: 20px; }
   .tab svg { width: 22px; height: 22px; }
-  .tab[aria-selected="true"] { box-shadow: 0 4px 18px rgb(0 0 0 / 0.12); }
-  .tab[aria-selected="true"]::before { content: ""; position: absolute; left: -10px; top: 50%; width: 3px; height: 26px; transform: translateY(-50%); border-radius: 0 3px 3px 0; background: var(--red); }
 }
 
 /* ---------- pro EQ editor ---------- */
@@ -579,3 +577,41 @@ button.link { background: none; border: 0; padding: 0; font: inherit; cursor: po
   #card-pceq .card-head { flex-wrap: wrap; }
   #card-pceq .preamp { order: 3; width: 100%; margin: 2px 0 0; }
 }
+
+/* ---------- tab switching ---------- */
+.tab { z-index: 1; }
+.tab-pill { position: absolute; left: 0; top: 0; z-index: 0; border-radius: 18px; background: var(--faint); pointer-events: none; }
+.tab-pill.ready { transition: transform 460ms var(--spring), width 300ms ease, height 300ms ease; }
+@media (min-width: 780px) {
+  .tab-pill { border-radius: 20px; box-shadow: 0 4px 18px rgb(0 0 0 / 0.12); }
+  .tab-pill::before { content: ""; position: absolute; left: -10px; top: 50%; width: 3px; height: 26px; transform: translateY(-50%); border-radius: 0 3px 3px 0; background: var(--red); }
+}
+.view.entering { animation: none; }
+.view.entering > .view-title, .view.entering .card { animation: rise-in 560ms var(--spring) both; animation-delay: calc(var(--i, 0) * 45ms); }
+@keyframes rise-in { from { opacity: 0; transform: translateY(16px) scale(0.985); } }
+
+/* ---------- even shapes ---------- */
+.grid { align-items: stretch; }
+.chips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.chips.wrap, .chips.grid-chips { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); }
+.chips.grid-chips { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+#pc-presets, #my-presets, #pc-my-presets { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.chip, .chips .chip.small { min-width: 0; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chips .chip { height: 40px; }
+.chips .chip.small { height: 34px; }
+.head-actions .chip.small { width: auto; min-width: 92px; height: 34px; }
+.pill { min-width: 120px; }
+.pill.small { min-width: 96px; }
+.dev-links .pill, .connect-row .pill { min-width: 140px; }
+.control-rows { display: grid; gap: 14px; }
+.control-row { display: grid; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { .view.entering > .view-title, .view.entering .card { animation: none; } .tab-pill.ready { transition: none; } }
+:root[data-motion="reduced"] .view.entering > .view-title, :root[data-motion="reduced"] .view.entering .card { animation: none; }
+:root[data-motion="reduced"] .tab-pill.ready { transition: none; }
+
+/* Hi-Fi: one control per row, label left, choices right */
+@media (min-width: 900px) {
+  .control-row { grid-template-columns: 200px minmax(0, 1fr); align-items: center; gap: 16px; }
+  .control-row .chips.grid-chips { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+#card-lowlag { align-items: center; }

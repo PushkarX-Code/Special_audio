@@ -14,7 +14,7 @@
     try {
       const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
       if (localStorage.getItem('motion') === 'reduced') document.documentElement.dataset.motion = 'reduced';
-      for (const k of ['accent', 'dots', 'glass']) { const v = localStorage.getItem('look.' + k); if (v) document.documentElement.dataset[k] = v; }
+      for (const k of ['dots', 'glass']) { const v = localStorage.getItem('look.' + k); if (v) document.documentElement.dataset[k] = v; }
     } catch {}
   </script>
   <script type="module" src="src/main.js"></script>
@@ -29,6 +29,7 @@
 
   <div class="shell app" data-status="idle">
     <nav class="tabs" aria-label="Sections" role="tablist">
+      <span class="tab-pill" aria-hidden="true"></span>
       <span class="tabs-brand" aria-hidden="true"><span class="status-dot" id="status-dot"></span><span class="side-status" id="side-status">Offline</span></span>
       <button type="button" role="tab" class="tab" data-view="home" aria-selected="true">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 11.2 12 4.5l8.2 6.7M6.3 9.4V19.5h4.2v-5.2h3v5.2h4.2V9.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -197,6 +198,14 @@
         <h1 class="view-title dot">Hi-Fi</h1>
         <p class="notice card" data-notice hidden></p>
         <div class="grid">
+          <section class="card" id="card-codec" data-feature="codec" aria-labelledby="codec-title">
+            <div class="card-head"><h2 class="label" id="codec-title" data-icon="headphones">Audio quality</h2><span class="lock label" aria-hidden="true"></span></div>
+            <p class="desc eq-sub">LDAC carries more detail to phones that support it. Computers use AAC. The headphones restart to switch.</p>
+            <div class="chips" role="radiogroup" aria-labelledby="codec-title" id="codec-chips">
+              <button type="button" role="radio" class="chip" data-value="aac">AAC</button>
+              <button type="button" role="radio" class="chip" data-value="ldac">LDAC</button>
+            </div>
+          </section>
           <section class="card row" id="card-lowlag" data-feature="lowLag" aria-labelledby="lowlag-title">
             <div>
               <div class="card-head"><h2 class="label" id="lowlag-title" data-icon="bolt">Low lag mode</h2><span class="lock label" aria-hidden="true"></span></div>
@@ -204,7 +213,12 @@
             </div>
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="lowlag-title" id="lowlag-switch"><span class="knob"></span></button>
           </section>
-          <section class="card" aria-labelledby="details-title">
+          <section class="card span-2" id="card-controls" data-feature="controls" aria-labelledby="controls-title">
+            <div class="card-head"><h2 class="label" id="controls-title" data-icon="sliders">Controls</h2><span class="lock label" aria-hidden="true"></span></div>
+            <p class="desc eq-sub">Choose what the buttons on your headphones do.</p>
+            <div class="control-rows" id="control-rows"></div>
+          </section>
+          <section class="card span-2" aria-labelledby="details-title">
             <div class="card-head"><h2 class="label" id="details-title" data-icon="headphones">Device</h2></div>
             <dl class="details" id="device-details"></dl>
           </section>
@@ -237,10 +251,6 @@
               <button type="button" role="radio" class="chip" data-value="on">On</button>
               <button type="button" role="radio" class="chip" data-value="off">Off</button>
             </div>
-          </section>
-          <section class="card" aria-labelledby="accent-title">
-            <div class="card-head"><h2 class="label" id="accent-title">Accent colour</h2></div>
-            <div class="chips swatches" role="radiogroup" aria-labelledby="accent-title" id="accent-chips"></div>
           </section>
           <section class="card" aria-labelledby="dots-title">
             <div class="card-head"><h2 class="label" id="dots-title">Dot shape</h2></div>

@@ -2,7 +2,7 @@
 // Reply shapes follow docs/protocol-research.md. Where the real device's behaviour is unknown, the guess is marked.
 import { encodeFrame, FrameParser } from '../protocol/frame.js';
 import { OP, ANC_BYTES } from '../protocol/commands.js';
-import { DOP, EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, encodeCustomEq, decodeCustomEq } from '../protocol/drafts.js';
+import { DOP, EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, encodeCustomEq, decodeCustomEq, CODECS } from '../protocol/drafts.js';
 import { IN } from '../protocol/parser.js';
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -15,7 +15,8 @@ export class MockHeadphones {
   constructor() {
     this.state = {
       battery: 82, charging: false, firmware: '1.0.0.27', model: [0x75, 0xb1],
-      noise: 'high', eq: 'dirac', spatial: 'off', lowLag: false, customEq: [0, 0, 0],
+      noise: 'high', eq: 'dirac', spatial: 'off', lowLag: false, customEq: [0, 0, 0], codec: 0,
+      controls: [[0x06, 0x0a, 0x01, 0x0b], [0x06, 0x0a, 0x07, 0x16], [0x06, 0x01, 0x07, 0x16], [0x06, 0x05, 0x01, 0x23]],
     };
     this.dataCb = () => {};
     this.closeCb = () => {};
@@ -95,6 +96,15 @@ export class MockHeadphones {
         const p = EQ_PRESETS.find((x) => x.index === payload[0]);
         if (p) s.eq = p.id;
         if (payload[0] === CUSTOM_PRESET_INDEX) s.eq = 'custom';
+        return ack();
+      }
+      case DOP.GET_CODEC: return reply(IN.CODEC, [s.codec]);
+      case DOP.SET_CODEC: if (Object.values(CODECS).includes(payload[0])) s.codec = payload[0]; return ack();
+      case DOP.GET_CONTROLS: return reply(IN.CONTROLS, [s.controls.length, ...s.controls.flat()]);
+      case DOP.SET_CONTROL: {
+        const [, dev, button, type, action] = payload;
+        const slot = s.controls.find((c) => c[1] === button && c[2] === type);
+        if (slot && dev === 0x06) slot[3] = action;
         return ack();
       }
       case DOP.GET_CUSTOM_EQ: return reply(IN.CUSTOM_EQ, encodeCustomEq(s.customEq));

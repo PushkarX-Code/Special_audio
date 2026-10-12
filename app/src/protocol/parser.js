@@ -2,7 +2,7 @@
 // Byte positions are payload offsets (frame offset minus the 8-byte header).
 // Sources as in commands.js: S1 = ear-web, S2 = BudsLink.
 import { ANC_BYTES } from './commands.js';
-import { EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, decodeCustomEq } from './drafts.js';
+import { EQ_PRESETS, SPATIAL_BYTES, LOW_LAG_BYTES, CUSTOM_PRESET_INDEX, decodeCustomEq, CODECS, CONTROL_SLOTS, CONTROL_ACTIONS, SLOT_ACTIONS } from './drafts.js';
 
 export const IN = {
   BATTERY_REPLY: 0x4007, // S1, S2
@@ -15,6 +15,8 @@ export const IN = {
   EQ: 0x4050,            // S1 (draft)
   EQ_ALT: 0x401f,        // S2 (draft)
   CUSTOM_EQ: 0x4044,     // S1, S2 (draft)
+  CODEC: 0x4029,         // S1 (draft)
+  CONTROLS: 0x4018,      // S1, S2 (draft)
   SPATIAL: 0x404f,       // S1 (draft)
   LOW_LAG_REPLY: 0x4041, // S1, S2
   LOW_LAG_PUSH: 0x7040,  // S2 only
@@ -24,7 +26,7 @@ export const INCOMING_NAMES = {
   [IN.BATTERY_REPLY]: 'battery', [IN.BATTERY_PUSH]: 'battery (push)',
   [IN.FIRMWARE]: 'firmware',
   [IN.ANC_REPLY]: 'noise control', [IN.ANC_PUSH]: 'noise control (push)', [IN.ANC_PUSH_ALT]: 'noise control (push)',
-  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.EQ_ALT]: 'eq preset', [IN.CUSTOM_EQ]: 'custom eq', [IN.SPATIAL]: 'spatial audio',
+  [IN.MODEL]: 'model', [IN.EQ]: 'eq preset', [IN.EQ_ALT]: 'eq preset', [IN.CUSTOM_EQ]: 'custom eq', [IN.CODEC]: 'audio codec', [IN.CONTROLS]: 'button controls', [IN.SPATIAL]: 'spatial audio',
   [IN.LOW_LAG_REPLY]: 'low lag', [IN.LOW_LAG_PUSH]: 'low lag (push)',
 };
 
@@ -68,6 +70,19 @@ export function parseFrame({ command, payload: p }) {
       if (p[0] === CUSTOM_PRESET_INDEX) return { eq: 'custom' };
       const preset = EQ_PRESETS.find((x) => x.index === p[0]);
       return preset ? { eq: preset.id } : null;
+    }
+    case IN.CODEC: {
+      const name = Object.keys(CODECS).find((k) => CODECS[k] === p[0]);
+      return name ? { codec: name } : null;
+    }
+    case IN.CONTROLS: {
+      const controls = {};
+      for (let i = 0, o = 1; i < (p[0] ?? 0) && o + 3 < p.length; i++, o += 4) {
+        const slot = CONTROL_SLOTS.find((x) => x.button === p[o + 1] && x.type === p[o + 2]);
+        const action = slot && SLOT_ACTIONS[slot.id].find((a) => CONTROL_ACTIONS[a].code === p[o + 3]);
+        if (slot && action) controls[slot.id] = action;
+      }
+      return Object.keys(controls).length ? { controls } : null;
     }
     case IN.CUSTOM_EQ: {
       const bands = decodeCustomEq(p);

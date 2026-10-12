@@ -9,6 +9,7 @@ import { isAllowed } from '../protocol/guard.js';
 import { toHex } from '../protocol/frame.js';
 
 const OPTIMISTIC_MS = 400;
+const NO_FEATURES = { anc: false, eq: false, customEq: false, spatial: false, lowLag: false, codec: false, controls: false };
 const SUPPORTED_MODEL = 'B175';
 const LOG_LIMIT = 400;
 
@@ -25,7 +26,9 @@ const initialState = () => ({
   spatial: null,
   lowLag: null,
   customEq: [0, 0, 0],     // bass, mid, treble in dB
-  features: { anc: false, eq: false, customEq: false, spatial: false, lowLag: false },
+  codec: null,             // aac | ldac
+  controls: {},            // slot id -> action id (see CONTROL_SLOTS)
+  features: { ...NO_FEATURES },
   readOnlyReason: null,
   error: null,
 });
@@ -121,7 +124,7 @@ export class Controller {
     const transport = this.transport;
     if (!transport) return; // user asked for it
     this.pending = {};
-    this.#set({ status: 'reconnecting', features: { anc: false, eq: false, customEq: false, spatial: false, lowLag: false } });
+    this.#set({ status: 'reconnecting', features: { ...NO_FEATURES } });
     this.#reconnect(transport, 0);
   }
 
@@ -150,13 +153,15 @@ export class Controller {
   // Which controls can be written on this transport: real hardware gets CONFIRMED opcodes only.
   #features() {
     const allowDraft = this.#allowDraft();
-    if (this.state.readOnlyReason) return { anc: false, eq: false, customEq: false, spatial: false, lowLag: false };
+    if (this.state.readOnlyReason) return { ...NO_FEATURES };
     return {
       anc: isAllowed(OP.SET_ANC, { allowDraft }),
       eq: isAllowed(DOP.SET_EQ, { allowDraft }),
       spatial: isAllowed(DOP.SET_SPATIAL, { allowDraft }),
       lowLag: isAllowed(DOP.SET_LOW_LAG, { allowDraft }),
       customEq: isAllowed(DOP.SET_CUSTOM_EQ, { allowDraft }),
+      codec: isAllowed(DOP.SET_CODEC, { allowDraft }),
+      controls: isAllowed(DOP.SET_CONTROL, { allowDraft }),
     };
   }
 
@@ -169,6 +174,7 @@ export class Controller {
     const reads = [
       ...(demo ? [draftCmd.getModel()] : []), cmd.getFirmware(), cmd.getBattery(), cmd.getAnc(),
       draftCmd.getEq(), draftCmd.getCustomEq(), draftCmd.getSpatial(), draftCmd.getLowLag(),
+      draftCmd.getCodec(), draftCmd.getControls(),
     ].filter((c) => isAllowed(c.command, { allowDraft }));
     for (const c of reads) {
       if (!this.session) return;
@@ -267,6 +273,17 @@ export class Controller {
       delete this.pending.customEq; delete this.pending.eq;
       this.#notify();
     }
+  }
+
+  // The headphones restart to switch codec; the reconnect reads the new value back.
+  async setCodec(name) {
+    if (!this.state.features.codec || !this.session || this.state.codec === name) return;
+    this.#set({ codec: name });
+    await this.session.request(draftCmd.setCodec(name)).catch((e) => this.#log({ dir: 'err', label: e.message }));
+  }
+  setControl(slot, action) {
+    if (!this.state.features.controls) return;
+    return this.#write(['controls'], { controls: { ...this.state.controls, [slot]: action } }, draftCmd.setControl(slot, action), draftCmd.getControls());
   }
 
   // Headphones the operating system has connected (any brand). Used when no control session is open.
