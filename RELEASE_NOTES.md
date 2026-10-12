@@ -1,7 +1,3 @@
-### New
-- Hi-Fi tab: choose the audio codec (AAC or LDAC) and what the action button, roller and energy slider do
-- Smooth tab switching: the highlight slides to the tab you pick and the cards rise in
-
-### Changed
-- Buttons and cards are now the same size across the app
-- One colour: Nothing red. The accent colour option is gone and the connected dot is white
+### Fixed
+- Mac: the headphone control channel now opens. Battery, noise control, EQ and the Hi-Fi controls work on Mac
+- Mac: if something still blocks the connection, the message says exactly what (Bluetooth permission, phone app holding the channel, or timeout)
