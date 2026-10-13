@@ -1,11 +1,12 @@
 // Visualizer levels: what the computer is playing, as 16 band levels (0..1), ~30 times a second.
-// Windows only (WASAPI loopback). Nothing is recorded or stored: each tick the newest samples are turned
-// into levels and thrown away. The page starts it while music plays and stops it otherwise.
+// Windows: WASAPI loopback. macOS: the system audio tap (mac_eq.rs), only once its permission is given.
+// Nothing is recorded or stored: each tick the newest samples are turned into levels and thrown away.
+// The page starts it while music plays and stops it otherwise.
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::AppHandle;
 
 pub const BANDS: usize = 16;
-const FFT_N: usize = 2048;
+pub(crate) const FFT_N: usize = 2048;
 static RUNNING: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
@@ -23,7 +24,26 @@ pub fn visualizer_start(app: AppHandle) -> Result<(), String> {
         });
         Ok(())
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
+    {
+        use tauri::Emitter;
+        if !crate::mac_eq::set_levels(true) {
+            return Err("not allowed yet".into());
+        }
+        if RUNNING.swap(true, Ordering::SeqCst) {
+            return Ok(());
+        }
+        std::thread::spawn(move || {
+            while RUNNING.load(Ordering::SeqCst) {
+                std::thread::sleep(std::time::Duration::from_millis(33));
+                if let Some((samples, rate)) = crate::mac_eq::recent(FFT_N) {
+                    let _ = app.emit("audio-levels", band_levels(&samples, rate).to_vec());
+                }
+            }
+        });
+        Ok(())
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
     {
         let _ = app;
         Err("not supported on this system".into())
@@ -33,6 +53,8 @@ pub fn visualizer_start(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn visualizer_stop() {
     RUNNING.store(false, Ordering::SeqCst);
+    #[cfg(target_os = "macos")]
+    crate::mac_eq::set_levels(false);
 }
 
 // Mono samples (oldest first, length FFT_N) -> band levels 0..1, log-spaced 50 Hz..16 kHz.

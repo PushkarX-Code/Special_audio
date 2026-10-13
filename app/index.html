@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Special Audio</title>
-  <meta name="description" content="Unofficial desktop companion for the CMF Headphone Pro. Not affiliated with Nothing Technology Ltd.">
+  <meta name="description" content="Desktop companion for your headphones, speakers and every sound device: battery, details, system EQ and more. Unofficial, not affiliated with Nothing Technology Ltd.">
   <meta name="color-scheme" content="dark light">
   <link rel="preload" href="fonts/Doto-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/SpaceMono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -62,7 +62,7 @@
       <section class="view view-home" id="view-home" role="tabpanel" aria-label="Home">
         <div class="hero">
           <p class="label status-line" id="status-text">Not connected</p>
-          <h1 class="device-name dot" id="device-name">No headphones</h1>
+          <h1 class="device-name dot" id="device-name">No device</h1>
           <div class="gauge" id="gauge">
             <canvas id="hero-canvas"></canvas>
             <div class="gauge-center">
@@ -75,6 +75,7 @@
           </div>
           <p class="hint" id="hint"></p>
           <button class="pill small" id="retry-btn" type="button" hidden>Try again</button>
+          <div class="chips wrap device-chips" id="device-chips" role="radiogroup" aria-label="Connected devices" hidden></div>
         </div>
 
         <div class="cards">
@@ -117,12 +118,13 @@
             </div>
           </section>
 
-          <section class="card" id="card-quick-eq" data-feature="eq" aria-labelledby="quick-eq-title">
+          <section class="card" id="card-quick-eq" aria-labelledby="quick-eq-title">
             <div class="card-head">
               <h2 class="label" id="quick-eq-title" data-icon="sliders">Sound</h2>
               <button type="button" class="link label" data-goto="sound">Equaliser</button>
             </div>
             <div class="chips wrap" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-eq"></div>
+            <div class="chips wrap" role="radiogroup" aria-labelledby="quick-eq-title" id="quick-pc" hidden></div>
           </section>
         </div>
       </section>
@@ -134,7 +136,7 @@
         <div class="grid">
           <section class="card span-2" id="card-eq" data-feature="eq" aria-labelledby="eq-title">
             <div class="card-head">
-              <h2 class="label" id="eq-title" data-icon="sliders">Equaliser</h2>
+              <h2 class="label" id="eq-title" data-icon="sliders">Device EQ</h2>
               <span class="lock label" aria-hidden="true"></span>
             </div>
             <canvas class="eq-canvas" id="eq-canvas" aria-hidden="true"></canvas>
@@ -161,11 +163,11 @@
 
           <section class="card span-2" id="card-pceq" data-pc hidden aria-labelledby="pceq-title">
             <div class="card-head">
-              <h2 class="label" id="pceq-title" data-icon="sliders">PC equaliser</h2>
+              <h2 class="label" id="pceq-title" data-icon="sliders">System EQ</h2>
               <span class="label preamp" id="pc-preamp"></span>
               <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="pceq-title" id="pc-switch"><span class="knob"></span></button>
             </div>
-            <p class="desc eq-sub">10 bands for everything your PC plays, on top of the headphone EQ. 31 Hz to 16 kHz · ±12 dB · automatic headroom</p>
+            <p class="desc eq-sub">10 bands for everything this computer plays, on any headphones, speakers or output. 31 Hz to 16 kHz · ±12 dB · automatic headroom</p>
             <div class="pc-setup" id="pc-setup" hidden>
               <p class="desc" id="pc-setup-text"></p>
               <button type="button" class="pill small primary" id="pc-setup-btn"></button>
@@ -308,15 +310,15 @@
             <button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="login-title" id="login-switch"><span class="knob"></span></button>
           </section>
           <section class="card row" aria-labelledby="notif-title">
-            <div><div class="card-head"><h2 class="label" id="notif-title">Notifications</h2></div><p class="desc">Tell me when headphones connect.</p></div>
+            <div><div class="card-head"><h2 class="label" id="notif-title">Notifications</h2></div><p class="desc">Tell me when a device connects.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="notif-title" id="notif-switch"><span class="knob"></span></button>
           </section>
           <section class="card row span-2" data-desktop aria-labelledby="exp-title">
-            <div><div class="card-head"><h2 class="label" id="exp-title">Full headphone control</h2></div><p class="desc">EQ presets, custom EQ, spatial audio and low lag on the CMF Headphone Pro. Every change is checked against what the headphones report back.</p></div>
+            <div><div class="card-head"><h2 class="label" id="exp-title">Full device control</h2></div><p class="desc">On-device EQ, custom EQ, spatial audio, low lag and button controls, on devices that have them. Every change is checked against what the device reports back.</p></div>
             <button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="exp-title" id="exp-switch"><span class="knob"></span></button>
           </section>
           <section class="card row span-2" aria-labelledby="reset-title">
-            <div><div class="card-head"><h2 class="label" id="reset-title">Reset</h2></div><p class="desc">Puts every setting back to how it started, including the headphones' sound. Your saved presets stay.</p></div>
+            <div><div class="card-head"><h2 class="label" id="reset-title">Reset</h2></div><p class="desc">Puts every setting back to how it started, including the system EQ and the device's own sound settings. Your saved presets stay.</p></div>
             <button type="button" class="pill small" id="reset-btn">Reset all</button>
           </section>
           <section class="card span-2 dev-card" aria-labelledby="dev-title">

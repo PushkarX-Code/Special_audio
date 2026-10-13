@@ -3,8 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>NSBluetoothAlwaysUsageDescription</key>
-  <string>Special Audio talks to your CMF Headphone Pro over Bluetooth to read battery and change settings.</string>
+  <string>Special Audio talks to your Bluetooth devices to read battery and device details and to change their settings.</string>
   <key>NSAppleEventsUsageDescription</key>
   <string>Special Audio shows the song playing in Spotify or Music and lets you play, pause and skip.</string>
+  <key>NSAudioCaptureUsageDescription</key>
+  <string>Special Audio runs its equaliser and visualizer on the sound your Mac plays. Nothing is recorded or stored.</string>
 </dict>
 </plist>

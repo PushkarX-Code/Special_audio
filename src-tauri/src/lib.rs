@@ -2,6 +2,8 @@
 mod audio;
 mod pc_eq;
 #[cfg(target_os = "macos")]
+mod mac_eq;
+#[cfg(target_os = "macos")]
 mod mac_link;
 mod bluetooth;
 mod media;
