@@ -15,7 +15,8 @@ const LOG_LIMIT = 400;
 
 const initialState = () => ({
   status: 'idle',          // idle | connecting | connected | reconnecting
-  kind: null,              // demo | serial | native | system (OS-connected headphones, no control channel)
+  kind: null,              // demo | serial | native | system (a device the OS has connected, no control channel)
+  deviceKind: null,        // headphones, speaker, sound output, … (system devices)
   deviceName: null,
   model: null,
   firmware: null,
@@ -132,7 +133,7 @@ export class Controller {
     const delays = [800, 2000, 4000, 8000];
     if (attempt >= delays.length) {
       this.transport = null;
-      this.#set({ ...initialState(), error: 'Lost the headphones. Check they are on and in range.' });
+      this.#set({ ...initialState(), error: 'Lost the connection. Check the device is on and in range.' });
       return;
     }
     this.reconnectTimer = setTimeout(async () => {
@@ -184,7 +185,7 @@ export class Controller {
 
   #apply(patch) {
     if (patch.model && patch.model !== SUPPORTED_MODEL) {
-      this.#set({ model: patch.model, readOnlyReason: `Model ${patch.model} is not a CMF Headphone Pro. Controls are locked.` });
+      this.#set({ model: patch.model, readOnlyReason: `This model's settings can't be changed here yet. Battery, details and the system EQ still work.` });
       this.#set({ features: this.#features() });
       return;
     }
@@ -294,8 +295,9 @@ export class Controller {
       return;
     }
     const battery = dev.battery == null ? null : { level: dev.battery, charging: false };
-    const same = this.state.kind === 'system' && this.state.deviceName === dev.name && this.state.battery?.level === battery?.level;
-    if (!same) this.#set({ ...initialState(), status: 'connected', kind: 'system', deviceName: dev.name, battery });
+    const same = this.state.kind === 'system' && this.state.deviceName === dev.name && this.state.battery?.level === battery?.level
+      && this.state.deviceKind === (dev.kind ?? null);
+    if (!same) this.#set({ ...initialState(), status: 'connected', kind: 'system', deviceName: dev.name, deviceKind: dev.kind ?? null, battery });
   }
 
   refreshBattery() { return this.session?.request(cmd.getBattery()).catch(() => {}); }

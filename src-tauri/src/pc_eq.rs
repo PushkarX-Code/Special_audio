@@ -1,6 +1,8 @@
-// PC equalizer (Windows): 10 bands for everything the computer plays, through Equalizer APO, the free
-// system-wide equalizer. The app writes its own file (special-audio.txt) next to Equalizer APO's
-// config.txt and adds one "Include:" line to config.txt. Nothing else in that folder is touched.
+// System equalizer: 10 bands for everything the computer plays, on any output device.
+// Windows: through Equalizer APO, the free system-wide equalizer. The app writes its own file
+// (special-audio.txt) next to Equalizer APO's config.txt and adds one "Include:" line to config.txt.
+// Nothing else in that folder is touched.
+// macOS: built in (mac_eq.rs, Core Audio process tap), nothing to install.
 use serde::Serialize;
 
 pub const FREQS: [u32; 10] = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
@@ -12,6 +14,8 @@ pub struct PcEqStatus {
     supported: bool, // Windows only
     installed: bool, // Equalizer APO found
     writable: bool,  // the app may write its file in the config folder
+    configurable: bool, // Equalizer APO's own device picker exists (Windows)
+    live: bool,         // the EQ runs inside the app: apply it again when the app starts (macOS)
 }
 
 /// The text written to special-audio.txt.
@@ -74,16 +78,25 @@ pub fn pc_eq_status() -> PcEqStatus {
     #[cfg(windows)]
     {
         match win::config_dir() {
-            Some(dir) => PcEqStatus { supported: true, installed: true, writable: win::can_write(&dir) },
-            None => PcEqStatus { supported: true, installed: false, writable: false },
+            Some(dir) => PcEqStatus { supported: true, installed: true, writable: win::can_write(&dir), configurable: true, live: false },
+            None => PcEqStatus { supported: true, installed: false, writable: false, configurable: false, live: false },
         }
     }
-    #[cfg(not(windows))]
-    PcEqStatus { supported: false, installed: false, writable: false }
+    #[cfg(target_os = "macos")]
+    {
+        let ok = crate::mac_eq::supported();
+        PcEqStatus { supported: ok, installed: ok, writable: ok, configurable: false, live: true }
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    PcEqStatus { supported: false, installed: false, writable: false, configurable: false, live: false }
 }
 
 #[tauri::command]
-pub fn pc_eq_apply(enabled: bool, preamp: f32, bands: Vec<f32>) -> Result<(), String> {
+pub async fn pc_eq_apply(enabled: bool, preamp: f32, bands: Vec<f32>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || apply(enabled, preamp, bands)).await.map_err(|e| e.to_string())?
+}
+
+fn apply(enabled: bool, preamp: f32, bands: Vec<f32>) -> Result<(), String> {
     let text = config_text(enabled, preamp, &bands)?;
     #[cfg(windows)]
     {
@@ -93,10 +106,15 @@ pub fn pc_eq_apply(enabled: bool, preamp: f32, bands: Vec<f32>) -> Result<(), St
             _ => e.to_string(),
         })
     }
-    #[cfg(not(windows))]
+    #[cfg(target_os = "macos")]
     {
         let _ = text;
-        Err("The PC equalizer is available on Windows".into())
+        crate::mac_eq::apply(enabled, preamp, &bands)
+    }
+    #[cfg(not(any(windows, target_os = "macos")))]
+    {
+        let _ = text;
+        Err("The system EQ is not available on this computer".into())
     }
 }
 
@@ -109,7 +127,7 @@ pub fn pc_eq_allow() -> Result<(), String> {
         win::run_elevated("icacls", &format!("\"{}\" /grant *S-1-5-32-545:(OI)(CI)M", dir.display()))
     }
     #[cfg(not(windows))]
-    Err("The PC equalizer is available on Windows".into())
+    Err("Only needed on Windows".into())
 }
 
 /// Opens Equalizer APO's Configurator, where the user ticks the headphones it should work on.
@@ -122,7 +140,7 @@ pub fn pc_eq_configure() -> Result<(), String> {
         win::run_elevated(&exe.to_string_lossy(), "")
     }
     #[cfg(not(windows))]
-    Err("The PC equalizer is available on Windows".into())
+    Err("Only needed on Windows".into())
 }
 
 #[cfg(test)]

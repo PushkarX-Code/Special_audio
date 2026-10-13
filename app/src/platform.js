@@ -6,8 +6,9 @@ export const invoke = (cmd, args) => (isDesktop ? T.core.invoke(cmd, args) : Pro
 export const emit = (event, payload) => (isDesktop ? T.event.emit(event, payload) : Promise.resolve());
 export const listen = (event, cb) => (isDesktop ? T.event.listen(event, (e) => cb(e.payload)) : Promise.resolve(() => {}));
 
-// Polls the headphones the OS has connected (any brand) and calls onChange with the first one, or null.
-export function watchSystemHeadphones(onChange, everyMs = 5000) {
+// Polls the devices the computer has connected (Bluetooth devices of any kind, plus the sound output)
+// and calls onChange with the full list whenever something changes (battery included).
+export function watchDevices(onChange, everyMs = 5000) {
   if (!isDesktop) return () => {};
   let last = '';
   let busy = false;
@@ -16,9 +17,8 @@ export function watchSystemHeadphones(onChange, everyMs = 5000) {
     busy = true;
     try {
       const list = (await invoke('audio_devices')) ?? [];
-      const dev = list[0] ?? null;
-      const key = JSON.stringify(dev);
-      if (key !== last) { last = key; onChange(dev); }
+      const key = JSON.stringify(list);
+      if (key !== last) { last = key; onChange(list); }
     } catch { /* keep polling */ }
     busy = false;
   };

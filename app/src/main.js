@@ -14,8 +14,8 @@ import { radioGroup, switchControl, dotRipple } from './ui/controls.js';
 import { createUpdates } from './ui/updates.js';
 import { addIcons } from './ui/icons.js';
 import { createEqEditor } from './ui/eq-pro.js';
-import { createPcEq } from './ui/pc-eq.js';
-import { isDesktop, invoke, emit, listen, watchSystemHeadphones, prefs } from './platform.js';
+import { createPcEq, PC_PRESETS } from './ui/pc-eq.js';
+import { isDesktop, invoke, emit, listen, watchDevices, prefs } from './platform.js';
 
 const $ = (id) => document.getElementById(id);
 const app = document.querySelector('.app');
@@ -130,15 +130,18 @@ if (new URLSearchParams(location.search).has('preview')) setTimeout(() => contro
 $('bt-btn').addEventListener('click', () => invoke('open_bluetooth_settings'));
 if (!isDesktop) $('bt-btn').hidden = true;
 
-// Headphones connected in the OS (any brand).
-// CMF Headphone Pro: open the private control channel automatically (desktop app).
-const CMF = /CMF Headphone Pro/i;
+// Devices the computer has connected: Bluetooth devices of any brand and kind, plus the sound output.
+// The chosen one shows on Home; with more than one, chips switch between them. Devices that speak the
+// Nothing control protocol also get their on-device settings (control channel, desktop app).
+const CONTROL_CAPABLE = /CMF Headphone Pro/i;
+const deviceKey = (d) => (d ? d.address ?? `output:${d.name}` : null);
+let devices = [];
 let systemDevice = null;
 let controlError = null;
 let opening = false; // while the control channel opens, its errors show under the ring, not as a toast
 const resync = () => controller.setSystemDevice(systemDevice);
 async function openControls(dev) {
-  if (!isDesktop || !dev?.address || !CMF.test(dev.name) || controller.session) return;
+  if (!isDesktop || !dev?.address || !CONTROL_CAPABLE.test(dev.name) || controller.session) return;
   controlError = null;
   opening = true;
   try {
@@ -150,13 +153,33 @@ async function openControls(dev) {
     opening = false;
   }
 }
-watchSystemHeadphones((dev) => {
-  const previous = systemDevice;
+const pickDevice = () => devices.find((d) => deviceKey(d) === prefs.get('activeDevice', null)) ?? devices[0] ?? null;
+function renderDeviceChips() {
+  const row = $('device-chips');
+  row.hidden = devices.length < 2;
+  row.replaceChildren(...devices.map((d) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip small'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', String(deviceKey(d) === deviceKey(systemDevice)));
+    b.textContent = d.battery != null ? `${d.name} · ${d.battery}%` : d.name;
+    b.title = d.kind ?? '';
+    b.addEventListener('click', () => { prefs.set('activeDevice', deviceKey(d)); setDevice(pickDevice()); });
+    return b;
+  }));
+}
+function setDevice(dev) {
+  const changed = deviceKey(dev) !== deviceKey(systemDevice);
   systemDevice = dev;
-  if (!dev && controller.state.kind === 'native') { controller.disconnect().then(resync); return; }
+  renderDeviceChips();
+  if (changed && controller.state.kind === 'native') {
+    controller.disconnect().then(() => { resync(); if (dev) openControls(dev); });
+    return;
+  }
   resync();
-  if (dev && dev.address !== previous?.address && controller.state.kind !== 'demo') openControls(dev);
-});
+  if (dev && changed && controller.state.kind !== 'demo') openControls(dev);
+  if (!changed) render(controller.state); // battery or details changed
+}
+watchDevices((list) => { devices = list; setDevice(pickDevice()); });
 $('retry-btn').addEventListener('click', () => openControls(systemDevice));
 createMusicBar($('music'), 2000, (playing) => { sound.setPlaying(playing); hero.wake(); musicViz.wake(); });
 $('contact-btn').addEventListener('click', () => {
@@ -164,10 +187,10 @@ $('contact-btn').addEventListener('click', () => {
   else location.href = `mailto:${['email.puskar', 'gmail.com'].join('@')}?subject=Special%20Audio`;
 });
 
-// Notification when headphones connect (real devices only, not the simulated one).
+// Notification when a device connects (Bluetooth devices only, not the sound output or the simulated one).
 let notifiedFor = null;
 controller.subscribe((s) => {
-  const name = s.status === 'connected' && s.kind !== 'demo' ? s.deviceName : null;
+  const name = s.status === 'connected' && s.kind !== 'demo' && (s.kind !== 'system' || systemDevice?.address) ? s.deviceName : null;
   if (name && name !== notifiedFor && prefs.get('notify', true)) {
     invoke('notify', { title: `${name} connected`, body: s.battery ? `Battery ${s.battery.level}%` : 'Ready to use' });
   }
@@ -187,6 +210,12 @@ const presetChip = (p) => {
 const CUSTOM_CHIP = { id: 'custom', label: 'Custom' };
 $('eq-chips').append(...[...EQ_PRESETS, CUSTOM_CHIP].map(presetChip));
 $('quick-eq').append(...[...EQ_PRESETS, CUSTOM_CHIP].map(presetChip));
+// Home quick EQ for devices without on-device EQ: the system EQ presets
+$('quick-pc').append(...PC_PRESETS.map((p) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio'); b.dataset.value = p.id; b.textContent = p.label;
+  return b;
+}));
 addIcons();
 
 // Noise control (i): what each mode does
@@ -202,6 +231,7 @@ document.addEventListener('click', (e) => {
 const pickEq = (v) => (v === 'custom' ? controller.setCustomEq(hpEq.get()) : controller.setEq(v));
 const eq = radioGroup($('eq-chips'), pickEq);
 const quickEq = radioGroup($('quick-eq'), pickEq);
+const quickPc = radioGroup($('quick-pc'), (id) => pcEq.select(id));
 const lowLag = switchControl($('lowlag-switch'), (on) => controller.setLowLag(on));
 const codec = radioGroup($('codec-chips'), (v) => {
   if (v === controller.state.codec) return;
@@ -360,7 +390,7 @@ const STATUS_TEXT = { idle: 'Not connected', connecting: 'Connecting', reconnect
 let lastError = null;
 let lastEqKey;
 
-controller.subscribe((s) => {
+function render(s) {
   emit('sa-state', publicState(s));
   const connected = s.status === 'connected';
   const busy = s.status === 'connecting' || s.status === 'reconnecting';
@@ -369,7 +399,7 @@ controller.subscribe((s) => {
   app.dataset.controllable = String(controllable);
 
   $('status-text').textContent = STATUS_TEXT[s.status];
-  $('device-name').textContent = s.status === 'idle' ? 'No headphones' : s.deviceName ?? 'Headphones';
+  $('device-name').textContent = s.status === 'idle' ? 'No device' : s.deviceName ?? 'Device';
 
   // hero: real battery when the headphones report it, otherwise "Connected"
   hero.setMode(connected ? 'connected' : busy ? 'connecting' : 'idle');
@@ -384,19 +414,15 @@ controller.subscribe((s) => {
   app.dataset.nobattery = String(connected && !hasBattery);
 
   $('idle-row').hidden = s.status !== 'idle';
-  const isCmf = CMF.test(s.deviceName ?? '');
-  const systemHint = s.kind !== 'system' ? ''
-    : !isCmf ? 'Full controls are available for the CMF Headphone Pro.'
-      : !isDesktop ? '' : controlError ? `Couldn't open the controls. ${controlError}` : 'Opening the headphone controls…';
+  const capable = CONTROL_CAPABLE.test(s.deviceName ?? '');
+  const systemHint = s.kind !== 'system' || !capable || !isDesktop ? ''
+    : controlError ? `Couldn't open the controls. ${controlError}` : 'Opening the device controls…';
   $('hint').textContent = s.readOnlyReason
-    ?? (s.status === 'idle' ? (isDesktop ? 'Turn your headphones on and connect them in Bluetooth settings.' : 'Download the desktop app to connect your headphones.') : systemHint);
-  $('retry-btn').hidden = !(s.kind === 'system' && isCmf && controlError);
+    ?? (s.status === 'idle' ? (isDesktop ? 'Turn a device on and connect it in Bluetooth settings.' : 'Download the desktop app to connect your devices.') : systemHint);
+  $('retry-btn').hidden = !(s.kind === 'system' && capable && controlError);
 
-  // Sound / Hi-Fi notice for headphones without a control channel
-  const notice = !connected ? 'Connect your headphones to use these controls.'
-    : s.kind !== 'system' ? ''
-      : isCmf ? 'Connecting to the headphone controls. Check the Home tab if this stays.'
-        : 'Full controls are available for the CMF Headphone Pro.';
+  // Sound / Hi-Fi: only a short note while nothing is connected
+  const notice = connected || busy ? '' : 'Connect a device to see its settings.';
   document.querySelectorAll('[data-notice]').forEach((el) => { el.textContent = notice; el.hidden = !notice; });
 
   // controls show confirmed state (or a <400 ms optimistic value from the controller)
@@ -430,18 +456,26 @@ controller.subscribe((s) => {
   lowLag.set(controllable && s.lowLag);
   lowLag.setEnabled(controllable && s.features.lowLag);
 
+  // On-device settings show only for devices that have them; everything else works for every device.
   for (const card of document.querySelectorAll('.card[data-feature]')) {
+    card.hidden = !controllable;
     card.dataset.locked = String(controllable && !s.features[card.dataset.feature]);
     card.dataset.unavailable = String(!controllable);
   }
 
+  // Every detail the system knows about the device, plus what the device itself reports.
+  const os = connected ? systemDevice?.details ?? [] : [];
+  const own = [
+    ['Model', s.model], ['Firmware', s.firmware], ['Codec', s.codec?.toUpperCase()],
+    ['Battery', hasBattery ? `${s.battery.level}%` : null],
+  ].filter(([, v]) => v);
+  const connection = !connected ? null : s.kind !== 'system' ? 'Bluetooth (full control)'
+    : systemDevice?.address ? 'Bluetooth' : 'Sound output';
   const details = [
     ['Name', s.deviceName ?? '-'],
-    ['Model', s.model ?? (CMF.test(s.deviceName ?? '') ? 'B175' : '-')],
-    ['Firmware', s.firmware ?? '-'],
-    ['Codec', s.codec ? s.codec.toUpperCase() : '-'],
-    ['Battery', hasBattery ? `${s.battery.level}%` : '-'],
-    ['Connection', s.kind === 'system' ? 'Bluetooth (audio only)' : connected ? 'Bluetooth (full control)' : '-'],
+    ...own,
+    ...os.filter(([k]) => !own.some(([o]) => o === k)),
+    ['Connection', connection ?? '-'],
   ];
   $('device-details').replaceChildren(...details.flatMap(([k, v]) => {
     const dt = document.createElement('dt'); dt.textContent = k;
@@ -452,6 +486,20 @@ controller.subscribe((s) => {
   // connection errors are already shown under the ring; toast everything else once
   if (s.error && s.error !== lastError && !opening && s.error !== controlError) toast(s.error);
   lastError = s.error;
-});
+  renderQuickEq(s);
+}
+controller.subscribe(render);
+
+// Home quick EQ: the device's own presets when it has them, otherwise the system EQ presets.
+function renderQuickEq(s = controller.state) {
+  const controllable = s.status === 'connected' && s.kind !== 'system';
+  const deviceEq = controllable && s.features.eq;
+  $('quick-eq').hidden = !deviceEq;
+  $('quick-pc').hidden = deviceEq;
+  quickPc.set(pcEq.current());
+  quickPc.setEnabled(pcEq.ready);
+  $('card-quick-eq').hidden = !deviceEq && $('card-pceq').hidden;
+}
+pcEq.subscribe(() => renderQuickEq());
 
 showView(prefs.get('view', 'home'));

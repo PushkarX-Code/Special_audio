@@ -1,6 +1,6 @@
 # Special Audio
 
-A desktop app for the **CMF Headphone Pro** on Windows and Mac. Battery, noise control, EQ presets, a pro custom EQ that lives on the headphones, a 10-band PC equaliser, spatial audio and low lag. No account, no sign-in.
+A desktop app for **every sound device** on Windows and Mac: headphones, earbuds, speakers, wired, USB and built-in outputs, plus any other Bluetooth device. Battery, every device detail, a 10-band system EQ and a live visualizer for all of them. Devices that speak the Nothing protocol also get noise control, on-device EQ, spatial audio, low lag and button controls. No account, no sign-in.
 
 Made by **Pushkar**, an indie developer who makes cool things.
 
@@ -66,18 +66,18 @@ There's no warning because the warning only appears for files downloaded through
 
 - All the code is public in this repository. Nothing is hidden.
 - The installers are built by GitHub's own servers from this code, not on someone's computer: see [Actions](https://github.com/PushkarX-Code/Special_audio/actions).
-- The app has no account, no sign-in, no tracking and no internet connection. It only talks to your headphones.
+- The app has no account, no sign-in, no tracking and no internet connection. It only talks to your devices.
 
 ## What's inside
 
 | Tab | What it does |
 |---|---|
-| **Home** | Headphone name, live battery ring, noise control, music controls, quick sound presets |
-| **Sound** | EQ presets; custom EQ on the headphones (drag the curve or set each band in 0.5 dB steps, compare, save presets); 10-band PC equaliser with presets and automatic headroom; spatial audio |
-| **Hi-Fi** | Audio quality (AAC or LDAC), button controls (action button, roller, energy slider), low lag mode, device details |
+| **Home** | Device name, live battery ring, a switch between connected devices, noise control (on devices that have it), music controls, quick sound presets |
+| **Sound** | 10-band system EQ for any device, with presets, saved curves and automatic headroom; on devices that have them: EQ presets, custom EQ on the device (drag the curve or set each band in 0.5 dB steps, compare, save presets) and spatial audio |
+| **Hi-Fi** | Every detail the computer knows about the device (type, maker, IDs, firmware, profiles, battery per side…); on devices that have them: audio quality (AAC or LDAC), button controls, low lag mode |
 | **Update** | Your version, what's new, and one-click updates |
 | **Look** | Theme, round or square dots, glass style, full or calm animation, music visualizer |
-| **Settings** | Start at login, notifications, full headphone control, developer and contact |
+| **Settings** | Start at login, notifications, full device control, reset all, developer and contact |
 
 It also lives in your **menu bar (Mac) or system tray (Windows)**: click the icon for a mini panel with battery, noise control, sound presets and music controls.
 
@@ -87,19 +87,21 @@ It also lives in your **menu bar (Mac) or system tray (Windows)**: click the ico
 
 | | Windows | Mac |
 |---|---|---|
-| CMF Headphone Pro: real battery, firmware, noise control (ANC, Transparency, Off, strength) | Yes | Yes |
-| Any Bluetooth headphones: name and connected notification | Yes | Yes (plus battery when reported) |
+| Any Bluetooth device (headphones, speakers, mice, keyboards…): name, battery, full details | Yes | Yes |
+| Wired, USB, HDMI and built-in outputs: name and details | Yes | Yes |
+| System EQ, 10 bands, for everything the computer plays, on any output | Yes, with the free [Equalizer APO](https://sourceforge.net/projects/equalizerapo/) | Yes, built in (macOS 14.2 or later) |
+| Visualizer: the ring and music card move with your music | Yes, from the real sound | Yes, from the real sound once System Audio Recording is allowed |
 | Music controls: song, play/pause, next, previous | Any music app | Spotify and Apple Music |
-| Visualizer: the ring and music card move with your music | Yes, from the real sound | A gentle pulse while music plays |
 | Menu bar / tray panel, start at login, in-app updates, custom looks | Yes | Yes |
-| CMF Headphone Pro: EQ presets, custom EQ, spatial audio, low lag | Yes | Yes |
-| PC equaliser, 10 bands, for everything the computer plays | Yes, with the free [Equalizer APO](https://sourceforge.net/projects/equalizerapo/) | |
+| Nothing-protocol devices: noise control, EQ presets, custom EQ, spatial audio, low lag, audio quality, button controls | Yes | Yes |
+
+**System EQ on Mac:** the first time you turn it on, macOS asks to allow System Audio Recording. The sound never leaves your Mac and nothing is recorded; the app only runs the EQ on it.
 
 Close the Nothing X app on your phone before connecting: the headphones accept one controller at a time.
 
 After every change the app asks the headphones what they actually switched to and shows that, so what you see is what's playing.
 
-**PC equaliser setup (Windows, once):** the Sound tab walks you through it. Install Equalizer APO, tick your headphones in the list it shows, restart, then click **Allow** in Special Audio. After that the curve applies to everything your PC plays.
+**System EQ setup (Windows, once):** the Sound tab walks you through it. Install Equalizer APO, tick your devices in the list it shows, restart, then click **Allow** in Special Audio. After that the curve applies to everything your PC plays.
 
 ---
 
@@ -123,7 +125,7 @@ GitHub builds them: **Actions → Build app → Run workflow**. That publishes a
 
 ### Safety
 
-- Every outgoing command is on a fixed allowlist. Commands documented by two independent sources are always on; commands from one source (EQ, custom EQ, spatial, low lag) can be switched off in Settings → Full headphone control. Anything else throws before it is sent.
+- Every outgoing command is on a fixed allowlist. Commands documented by two independent sources are always on; commands from one source (EQ, custom EQ, spatial, low lag) can be switched off in Settings → Full device control. Anything else throws before it is sent.
 - No firmware, reset or pairing commands exist in the code.
 - One command per 150 ms. Every command waits for the device reply, with one retry.
 - Raw Bluetooth logs are git-ignored: they contain addresses and serial numbers.
